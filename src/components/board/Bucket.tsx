@@ -5,7 +5,8 @@ import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MoreHorizontal, Plus, ChevronDown, ChevronRight } from 'lucide-react';
+import { MoreHorizontal, Plus, ChevronDown, ChevronRight, X } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useBoardStore } from '@/lib/store/boardStore';
 import { CardItemMemo } from './CardItemMemo';
 import { useDroppable } from '@dnd-kit/core';
@@ -31,6 +32,8 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
   const [showCreateCardDialog, setShowCreateCardDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [newCardTitle, setNewCardTitle] = useState('');
   const {
     attributes,
     listeners,
@@ -76,6 +79,25 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
     await deleteBucket(bucket.id);
   };
 
+  const handleQuickAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newCardTitle.trim()) {
+      await createCard(bucket.id, newCardTitle.trim());
+      setNewCardTitle('');
+      // Keep the form open for rapid card creation
+    }
+  };
+
+  const handleQuickAddKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleQuickAddSubmit(e as any);
+    } else if (e.key === 'Escape') {
+      setIsAddingCard(false);
+      setNewCardTitle('');
+    }
+  };
+
   // Separate active and completed cards
   const sortedCards = cards.sort((a, b) => a.position - b.position);
   const activeCards = sortedCards.filter(card => !card.completed);
@@ -90,7 +112,7 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
       style={style}
       className="w-80 flex-shrink-0 h-full"
     >
-      <Card className="h-full flex flex-col bg-muted/30 border-border/40 py-0 gap-0">
+      <Card className="group h-full flex flex-col bg-muted/30 border-border/40 py-0 gap-0">
         <div className="px-3 py-2.5 flex items-center justify-between">
           <h3 
             className="text-sm font-medium text-foreground cursor-move"
@@ -127,7 +149,7 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
                 const isBeingDragged = card.id === activeCardId;
                 
                 return (
-                  <div key={card.id} style={{ opacity: isBeingDragged ? 0 : 1 }}>
+                  <div key={card.id}>
                     <CardItemMemo card={card} />
                   </div>
                 );
@@ -162,13 +184,43 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
         </div>
         
         <div className="px-2 pb-1.5">
-          <button
-            className="w-full justify-start flex items-center py-1.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors rounded"
-            onClick={() => setShowCreateCardDialog(true)}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            Add a card
-          </button>
+          {isAddingCard ? (
+            <form onSubmit={handleQuickAddSubmit} className="space-y-2">
+              <Textarea
+                value={newCardTitle}
+                onChange={(e) => setNewCardTitle(e.target.value)}
+                onKeyDown={handleQuickAddKeyDown}
+                placeholder="Enter a title for this card..."
+                className="min-h-[60px] resize-none"
+                autoFocus
+              />
+              <div className="flex items-center gap-2">
+                <Button type="submit" size="sm" className="h-8">
+                  Add card
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    setIsAddingCard(false);
+                    setNewCardTitle('');
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <button
+              className="w-full justify-start flex items-center py-1.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-200 rounded opacity-0 group-hover:opacity-100"
+              onClick={() => setIsAddingCard(true)}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Add a card
+            </button>
+          )}
         </div>
       </Card>
       

@@ -52,7 +52,7 @@ export function CardItem({ card }: CardItemProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition: transition || 'transform 200ms cubic-bezier(0.25, 0.1, 0.25, 1)',
-    opacity: isDragging ? 0 : 1,
+    opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 1000 : undefined,
   };
 
@@ -102,21 +102,18 @@ export function CardItem({ card }: CardItemProps) {
           style={style}
           className={cn(
             "bg-card text-card-foreground rounded-lg border shadow-sm",
-            "p-2.5 hover:shadow-md transition-all duration-200 group relative",
+            "p-2.5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ease-in-out group relative",
             card.completed && "opacity-60",
-            isDragging && "shadow-xl cursor-grabbing scale-105"
+            isDragging && "border-dashed border-muted-foreground/50 bg-muted/20"
           )}
           {...attributes}
         >
-        {/* Invisible drag overlay */}
-        <div 
+        {/* Card content */}
+        <div
           ref={setActivatorNodeRef}
-          className="absolute inset-0 z-0"
           {...listeners}
-        />
-        
-        {/* Card content - above drag overlay */}
-        <div className="relative z-10">
+          className="cursor-grab active:cursor-grabbing"
+        >
           {/* Priority, labels and action buttons */}
           {(card.priority || (card.labels && card.labels.length > 0)) && (
             <div className="flex items-start justify-between gap-2">
@@ -157,7 +154,7 @@ export function CardItem({ card }: CardItemProps) {
                 )}
               </div>
               {/* Action buttons inline with labels */}
-              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 -mr-1" data-no-dnd="true">
+              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 -mr-1" onPointerDown={(e) => e.stopPropagation()}>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -187,7 +184,7 @@ export function CardItem({ card }: CardItemProps) {
           {/* Action buttons for cards without labels */}
           {!(card.priority || (card.labels && card.labels.length > 0)) && (
             <div className="flex justify-end -mt-1 mb-1">
-              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity -mr-1" data-no-dnd="true">
+              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity -mr-1" onPointerDown={(e) => e.stopPropagation()}>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -222,6 +219,7 @@ export function CardItem({ card }: CardItemProps) {
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               onBlur={handleSaveTitle}
+              onPointerDown={(e) => e.stopPropagation()}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleSaveTitle();
@@ -241,7 +239,6 @@ export function CardItem({ card }: CardItemProps) {
                 card.completed && "line-through text-muted-foreground"
               )}
               onDoubleClick={handleStartEditingTitle}
-              data-no-dnd="true"
             >
               {card.title}
             </h4>

@@ -227,18 +227,7 @@ export function BoardView() {
             easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
           }}>
             {activeCard && (
-              <div className="bg-card px-2.5 py-2 rounded-lg shadow-2xl border border-border/50 w-80 transform rotate-2 opacity-90 transition-transform">
-                <div className="space-y-1.5">
-                  {activeCard.priority && (
-                    <div className={`h-1 w-8 rounded ${
-                      activeCard.priority === 'high' ? 'bg-red-500' :
-                      activeCard.priority === 'medium' ? 'bg-yellow-500' :
-                      'bg-green-500'
-                    }`} />
-                  )}
-                  <p className="font-normal text-sm text-foreground/90">{activeCard.title}</p>
-                </div>
-              </div>
+              <div className="bg-transparent border-2 border-dashed border-primary/50 rounded-lg w-80 h-24 cursor-grabbing" />
             )}
           </DragOverlay>
         </DndContext>
