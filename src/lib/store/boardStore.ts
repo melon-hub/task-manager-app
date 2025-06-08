@@ -19,9 +19,11 @@ interface BoardState {
   labels: Label[];
   loading: boolean;
   filters: FilterState;
+  hoveredBucketId: string | null;
   
   // Actions
   loadBoard: (boardId: string) => Promise<void>;
+  setHoveredBucketId: (bucketId: string | null) => void;
   createBoard: (title: string) => Promise<Board>;
   updateBoard: (boardId: string, updates: Partial<Board>) => Promise<void>;
   createBucket: (title: string) => Promise<void>;
@@ -61,6 +63,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   labels: [],
   loading: false,
   filters: defaultFilters,
+  hoveredBucketId: null,
+
+  setHoveredBucketId: (bucketId: string | null) => {
+    set({ hoveredBucketId: bucketId });
+  },
 
   loadBoard: async (boardId: string) => {
     set({ loading: true });

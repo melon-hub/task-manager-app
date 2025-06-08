@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useBoardStore } from '@/lib/store/boardStore';
 import {
   Dialog,
   DialogContent,
@@ -32,10 +33,15 @@ interface CreateCardDialogProps {
     labels?: LabelType[];
     assignees?: string[];
     checklist?: ChecklistItem[];
+    bucketId?: string;
   }) => void;
+  targetBucketName?: string;
+  showBucketSelector?: boolean;
+  defaultBucketId?: string;
 }
 
-export function CreateCardDialog({ open, onOpenChange, onCreateCard }: CreateCardDialogProps) {
+export function CreateCardDialog({ open, onOpenChange, onCreateCard, targetBucketName, showBucketSelector = false, defaultBucketId }: CreateCardDialogProps) {
+  const { buckets } = useBoardStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | ''>('');
@@ -45,6 +51,30 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard }: CreateCar
   const [newAssignee, setNewAssignee] = useState('');
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [selectedBucketId, setSelectedBucketId] = useState<string>('');
+
+  // Handle dialog open/close
+  useEffect(() => {
+    if (open) {
+      // When opening, set the default bucket
+      if (showBucketSelector && buckets.length > 0) {
+        const targetId = defaultBucketId || buckets[0].id;
+        setSelectedBucketId(targetId);
+      }
+    } else {
+      // When closing, reset all form fields
+      setTitle('');
+      setDescription('');
+      setPriority('');
+      setDueDate('');
+      setLabels([]);
+      setAssignees([]);
+      setNewAssignee('');
+      setChecklist([]);
+      setNewChecklistItem('');
+      setSelectedBucketId('');
+    }
+  }, [open, showBucketSelector, buckets, defaultBucketId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,17 +87,9 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard }: CreateCar
         labels: labels.length > 0 ? labels : undefined,
         assignees: assignees.length > 0 ? assignees : undefined,
         checklist: checklist.length > 0 ? checklist : undefined,
+        bucketId: selectedBucketId || undefined,
       });
-      // Reset form
-      setTitle('');
-      setDescription('');
-      setPriority('');
-      setDueDate('');
-      setLabels([]);
-      setAssignees([]);
-      setNewAssignee('');
-      setChecklist([]);
-      setNewChecklistItem('');
+      // Close dialog (form will be reset by the useEffect)
       onOpenChange(false);
     }
   };
@@ -111,11 +133,33 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard }: CreateCar
         <DialogHeader>
           <DialogTitle>Create New Card</DialogTitle>
           <DialogDescription>
-            Add details for your new task
+            {targetBucketName ? (
+              <>Add a card to <span className="font-medium">{targetBucketName}</span></>
+            ) : (
+              'Add details for your new task'
+            )}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+            {showBucketSelector && buckets.length > 0 && (
+              <div className="grid gap-2">
+                <Label htmlFor="bucket-select">List</Label>
+                <Select value={selectedBucketId} onValueChange={setSelectedBucketId}>
+                  <SelectTrigger id="bucket-select" className="w-full">
+                    <SelectValue placeholder="Select a list" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {buckets.map((bucket) => (
+                      <SelectItem key={bucket.id} value={bucket.id}>
+                        {bucket.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             <div className="grid gap-2">
               <Label htmlFor="card-title">Title</Label>
               <Input
@@ -123,7 +167,7 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard }: CreateCar
                 placeholder="Enter card title..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                autoFocus
+                autoFocus={!showBucketSelector}
               />
             </div>
             

@@ -6,7 +6,7 @@ import { Card as CardUI } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, closestCenter, DragStartEvent, DragOverEvent, pointerWithin, rectIntersection } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bucket } from './Bucket';
 import { Card } from '@/types';
 import { CreateBucketDialog } from './CreateBucketDialog';

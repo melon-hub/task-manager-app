@@ -28,7 +28,7 @@ interface BucketProps {
 }
 
 export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
-  const { createCard, deleteBucket, updateCard } = useBoardStore();
+  const { createCard, deleteBucket, updateCard, setHoveredBucketId, hoveredBucketId } = useBoardStore();
   const [showCreateCardDialog, setShowCreateCardDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -112,7 +112,14 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
       style={style}
       className="w-80 flex-shrink-0 h-full"
     >
-      <Card className="group h-full flex flex-col bg-muted/30 border-border/40 py-0 gap-0">
+      <Card 
+        className={cn(
+          "group h-full flex flex-col bg-muted/30 border-border/40 py-0 gap-0 hover:bg-muted/40 transition-colors",
+          hoveredBucketId === bucket.id && "ring-1 ring-primary/30"
+        )}
+        onMouseEnter={() => setHoveredBucketId(bucket.id)}
+        onMouseLeave={() => setHoveredBucketId(null)}
+      >
         <div className="px-3 py-2.5 flex items-center justify-between">
           <h3 
             className="text-sm font-medium text-foreground cursor-move"
@@ -228,6 +235,7 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
         open={showCreateCardDialog}
         onOpenChange={setShowCreateCardDialog}
         onCreateCard={handleAddCard}
+        targetBucketName={bucket.title}
       />
       
       <DeleteDialog

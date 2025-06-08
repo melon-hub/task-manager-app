@@ -29,6 +29,8 @@ export function CardItem({ card }: CardItemProps) {
   const [showLabelTooltip, setShowLabelTooltip] = useState(false);
   const labelTriggerRef = useRef<HTMLDivElement>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   
   const {
     attributes,
@@ -94,11 +96,33 @@ export function CardItem({ card }: CardItemProps) {
     }
   }, [showLabelTooltip]);
 
+  // Handle keyboard shortcut for edit when hovering
+  useEffect(() => {
+    if (!isHovered) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'e' && !e.metaKey && !e.ctrlKey) {
+        // Don't trigger if typing in an input
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+          return;
+        }
+        e.preventDefault();
+        setShowEditDialog(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isHovered]);
+
   return (
     <>
       <CardContextMenu card={card}>
         <div
-          ref={setNodeRef}
+          ref={(node) => {
+            setNodeRef(node);
+            cardRef.current = node;
+          }}
           style={style}
           className={cn(
             "bg-card text-card-foreground rounded-lg border shadow-sm",
@@ -107,6 +131,8 @@ export function CardItem({ card }: CardItemProps) {
             isDragging && "border-dashed border-muted-foreground/50 bg-muted/20"
           )}
           {...attributes}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
         {/* Card content */}
         <div
@@ -155,6 +181,7 @@ export function CardItem({ card }: CardItemProps) {
               </div>
               {/* Action buttons inline with labels */}
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 -mr-1" onPointerDown={(e) => e.stopPropagation()}>
+                <kbd className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded font-mono">E</kbd>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -185,6 +212,7 @@ export function CardItem({ card }: CardItemProps) {
           {!(card.priority || (card.labels && card.labels.length > 0)) && (
             <div className="flex justify-end -mt-1 mb-1">
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity -mr-1" onPointerDown={(e) => e.stopPropagation()}>
+                <kbd className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded font-mono">E</kbd>
                 <Button
                   size="icon"
                   variant="ghost"

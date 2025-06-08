@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { GlobalShortcuts } from './layout/GlobalShortcuts';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -82,6 +83,7 @@ export function ThemeProvider({
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
       {children}
+      <GlobalShortcuts />
     </ThemeProviderContext.Provider>
   );
 }
