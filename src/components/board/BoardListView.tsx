@@ -30,7 +30,7 @@ type SortConfig = {
 };
 
 export function BoardListView() {
-  const { currentBoard, buckets, cards, updateCard, deleteCard, moveCard, labels, getFilteredCards } = useBoardStore();
+  const { currentBoard, buckets, cards, createCard, updateCard, deleteCard, moveCard, labels, getFilteredCards } = useBoardStore();
   const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
   const [editingCard, setEditingCard] = useState<Card | null>(null);

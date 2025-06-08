@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { startOfDay, startOfWeek, startOfMonth, endOfDay, isAfter, isBefore, format, addDays, subDays } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { db } from '@/lib/db/schema';
-import { Board } from '@/types';
+import { Board, Card as CardType, Bucket, ChecklistItem } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useRouter } from 'next/navigation';
 import {
@@ -40,13 +40,13 @@ export default function DashboardPage() {
   const { dashboardPreferences } = usePreferencesStore();
   
   const [boards, setBoards] = useState<Board[]>([]);
-  const [buckets, setBuckets] = useState<any[]>([]);
-  const [cards, setCards] = useState<any[]>([]);
+  const [buckets, setBuckets] = useState<Bucket[]>([]);
+  const [cards, setCards] = useState<CardType[]>([]);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'all'>(dashboardPreferences.defaultDateRange);
   const [quickFilter, setQuickFilter] = useState<'all' | 'overdue' | 'high-priority' | 'no-due-date' | 'completed'>(dashboardPreferences.defaultQuickFilter);
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
-  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load all data from database
@@ -66,8 +66,7 @@ export default function DashboardPage() {
         
         // Set initial board selection
         if (selectedBoardId === null && boardsData.length > 0) {
-          const defaultBoard = boardsData.find(b => b.isDefault);
-          setSelectedBoardId(defaultBoard ? defaultBoard.id : 'all');
+          setSelectedBoardId('all');
         }
       } finally {
         setIsLoading(false);
@@ -214,7 +213,7 @@ export default function DashboardPage() {
   const cardsWithChecklists = finalFilteredCards.filter(c => c.checklist && c.checklist.length > 0);
   const totalChecklistItems = cardsWithChecklists.reduce((acc, card) => acc + (card.checklist?.length || 0), 0);
   const completedChecklistItems = cardsWithChecklists.reduce((acc, card) => 
-    acc + (card.checklist?.filter(item => item.completed).length || 0), 0
+    acc + (card.checklist?.filter((item: ChecklistItem) => item.completed).length || 0), 0
   );
   const checklistProgress = totalChecklistItems > 0 
     ? Math.round((completedChecklistItems / totalChecklistItems) * 100) 
@@ -472,6 +471,7 @@ export default function DashboardPage() {
     const cardsWithDueDates = cards.filter(c => !c.completed && c.dueDate);
     
     const atRisk = cardsWithDueDates.filter(card => {
+      if (!card.dueDate) return false;
       const dueDate = new Date(card.dueDate);
       const today = new Date();
       const daysRemaining = (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
@@ -785,7 +785,6 @@ export default function DashboardPage() {
               {boards.map(board => (
                 <SelectItem key={board.id} value={board.id}>
                   {board.title}
-                  {board.isDefault && <span className="ml-2 text-xs text-muted-foreground">(Default)</span>}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -846,8 +845,7 @@ export default function DashboardPage() {
                 setDateRange('week');
                 setQuickFilter('all');
                 setAssigneeFilter('all');
-                const defaultBoard = boards.find(b => b.isDefault);
-                setSelectedBoardId(defaultBoard ? defaultBoard.id : 'all');
+                setSelectedBoardId('all');
               }}
               className="text-xs ml-auto"
             >

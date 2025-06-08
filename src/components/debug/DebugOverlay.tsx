@@ -69,9 +69,9 @@ export function DebugOverlay() {
     if (element.className) {
       if (typeof element.className === 'string') {
         className = element.className;
-      } else if (element.className.baseVal !== undefined) {
+      } else if (typeof element.className === 'object' && 'baseVal' in element.className) {
         // SVG elements have className as SVGAnimatedString
-        className = element.className.baseVal;
+        className = (element.className as any).baseVal;
       }
     }
     
@@ -103,9 +103,9 @@ export function DebugOverlay() {
       if (currentElement.className) {
         if (typeof currentElement.className === 'string') {
           classNameStr = currentElement.className;
-        } else if (currentElement.className.baseVal !== undefined) {
+        } else if (typeof currentElement.className === 'object' && 'baseVal' in currentElement.className) {
           // SVG elements
-          classNameStr = currentElement.className.baseVal;
+          classNameStr = (currentElement.className as any).baseVal;
         }
       }
       

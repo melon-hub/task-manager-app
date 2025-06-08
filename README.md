@@ -34,6 +34,9 @@ A modern, feature-rich task management application inspired by Trello, Microsoft
 - 🔍 **Visual Progress** - See checklist progress at a glance with filled dots
 - 🎯 **Hover Actions** - Quick access to edit and delete functions
 - ⏱️ **Loading States** - Skeleton loaders and empty states for better UX
+- ⌨️ **Keyboard Shortcuts** - Press 'e' to edit on hover, 'n' to create new card, Cmd/Ctrl+K for command palette
+- 🚀 **Fluid Interactions** - Hover-to-reveal buttons, inline card creation, smooth animations
+- 🛡️ **Error Boundaries** - Graceful error handling with retry functionality
 
 ### Analytics & Dashboard
 - 📊 **Interactive Dashboard** - Comprehensive analytics with charts and metrics
@@ -95,6 +98,13 @@ npm run dev
 - **Prettier** - Code formatting
 - **TypeScript** - Static type checking
 
+### Architecture Highlights
+- 🏗️ **Component Composition** - Large components refactored into focused, reusable pieces
+- 🧩 **Modular Design** - Clear separation of concerns with dedicated manager components
+- 🔄 **State Management** - Efficient state lifting with Zustand for global state
+- 💾 **Local-First** - IndexedDB for offline capability and instant performance
+- 🎨 **Clean Code** - TypeScript interfaces, proper error handling, and maintainable structure
+
 ## 📁 Project Structure
 
 ```
@@ -106,8 +116,14 @@ src/
 ├── components/         # React components
 │   ├── ui/            # shadcn/ui components
 │   ├── board/         # Board-specific components
+│   │   ├── edit-card/ # EditCardDialog sub-components
+│   │   │   ├── ChecklistManager.tsx
+│   │   │   ├── AssigneeManager.tsx
+│   │   │   └── LabelManager.tsx
+│   │   └── ...
 │   ├── dashboard/     # Dashboard components
-│   └── layout/        # Layout components
+│   ├── layout/        # Layout components
+│   └── ErrorBoundary.tsx
 ├── lib/               # Utilities and core logic
 │   ├── store/         # Zustand stores
 │   ├── db/            # Database schema and operations

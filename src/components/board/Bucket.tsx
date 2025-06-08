@@ -28,7 +28,7 @@ interface BucketProps {
 }
 
 export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
-  const { createCard, deleteBucket, updateCard, setHoveredBucketId, hoveredBucketId } = useBoardStore();
+  const { createCard, deleteBucket, updateCard, setHoveredBucketId } = useBoardStore();
   const [showCreateCardDialog, setShowCreateCardDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -113,10 +113,7 @@ export function Bucket({ bucket, cards, activeCardId }: BucketProps) {
       className="w-80 flex-shrink-0 h-full"
     >
       <Card 
-        className={cn(
-          "group h-full flex flex-col bg-muted/30 border-border/40 py-0 gap-0 hover:bg-muted/40 transition-colors",
-          hoveredBucketId === bucket.id && "ring-1 ring-primary/30"
-        )}
+        className="group h-full flex flex-col bg-muted/30 border-border/40 py-0 gap-0 hover:bg-muted/40 transition-colors"
         onMouseEnter={() => setHoveredBucketId(bucket.id)}
         onMouseLeave={() => setHoveredBucketId(null)}
       >

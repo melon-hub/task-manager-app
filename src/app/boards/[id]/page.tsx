@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useBoardStore } from '@/lib/store/boardStore';
 import { BoardView } from '@/components/board/BoardView';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function BoardPage() {
   const params = useParams();
@@ -32,5 +33,9 @@ export default function BoardPage() {
     );
   }
 
-  return <BoardView />;
+  return (
+    <ErrorBoundary>
+      <BoardView />
+    </ErrorBoundary>
+  );
 }

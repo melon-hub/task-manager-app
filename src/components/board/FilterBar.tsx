@@ -182,7 +182,7 @@ export function FilterBar() {
               checked={filters.selectedPriorities.includes('high')}
               onCheckedChange={(checked) => {
                 const newPriorities = checked
-                  ? [...filters.selectedPriorities, 'high']
+                  ? [...filters.selectedPriorities, 'high' as const]
                   : filters.selectedPriorities.filter(p => p !== 'high');
                 updateFilters({ selectedPriorities: newPriorities });
               }}
@@ -194,7 +194,7 @@ export function FilterBar() {
               checked={filters.selectedPriorities.includes('medium')}
               onCheckedChange={(checked) => {
                 const newPriorities = checked
-                  ? [...filters.selectedPriorities, 'medium']
+                  ? [...filters.selectedPriorities, 'medium' as const]
                   : filters.selectedPriorities.filter(p => p !== 'medium');
                 updateFilters({ selectedPriorities: newPriorities });
               }}
@@ -206,7 +206,7 @@ export function FilterBar() {
               checked={filters.selectedPriorities.includes('low')}
               onCheckedChange={(checked) => {
                 const newPriorities = checked
-                  ? [...filters.selectedPriorities, 'low']
+                  ? [...filters.selectedPriorities, 'low' as const]
                   : filters.selectedPriorities.filter(p => p !== 'low');
                 updateFilters({ selectedPriorities: newPriorities });
               }}

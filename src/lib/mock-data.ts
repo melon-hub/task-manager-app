@@ -57,13 +57,14 @@ export async function createMockData() {
     await db.buckets.bulkAdd(buckets);
 
     // Create labels
+    const now = new Date();
     const labels: Label[] = [
-      { id: 'label-1', name: 'Frontend', color: '#3B82F6' },
-      { id: 'label-2', name: 'Backend', color: '#10B981' },
-      { id: 'label-3', name: 'Design', color: '#F59E0B' },
-      { id: 'label-4', name: 'Bug', color: '#EF4444' },
-      { id: 'label-5', name: 'Feature', color: '#8B5CF6' },
-      { id: 'label-6', name: 'Documentation', color: '#6B7280' },
+      { id: 'label-1', boardId: wfpBoard.id, name: 'Frontend', color: '#3B82F6', createdAt: now, updatedAt: now },
+      { id: 'label-2', boardId: wfpBoard.id, name: 'Backend', color: '#10B981', createdAt: now, updatedAt: now },
+      { id: 'label-3', boardId: wfpBoard.id, name: 'Design', color: '#F59E0B', createdAt: now, updatedAt: now },
+      { id: 'label-4', boardId: wfpBoard.id, name: 'Bug', color: '#EF4444', createdAt: now, updatedAt: now },
+      { id: 'label-5', boardId: wfpBoard.id, name: 'Feature', color: '#8B5CF6', createdAt: now, updatedAt: now },
+      { id: 'label-6', boardId: wfpBoard.id, name: 'Documentation', color: '#6B7280', createdAt: now, updatedAt: now },
     ];
     await db.labels.bulkAdd(labels);
 

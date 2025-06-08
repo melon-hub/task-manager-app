@@ -23,6 +23,22 @@
 - [x] Label system (needs UX improvements)
 - [x] Search functionality (basic implementation)
 
+### Recently Completed Improvements ✅
+
+#### Code Quality & Architecture Improvements
+- **[x] Error Boundaries:** Added React error boundaries to gracefully handle component errors
+  - `ErrorBoundary.tsx` component with user-friendly error UI
+  - Wrapped critical components like BoardView
+  - Includes retry functionality
+  
+- **[x] Component Decomposition:** Refactored large components into smaller, focused pieces
+  - Split EditCardDialog (450 lines) into:
+    - `ChecklistManager.tsx` - Manages checklist items with progress tracking
+    - `AssigneeManager.tsx` - Handles assignee add/remove functionality  
+    - `LabelManager.tsx` - Label management with drag-and-drop reordering
+  - Improved maintainability and testability
+  - Better separation of concerns
+
 ### High Priority Improvements 🔥
 
 #### 1. Search & Filtering
@@ -52,17 +68,17 @@
 
 This section details a backlog of high-impact features focused on improving the application's "feel" and intuitive nature, inspired by best-in-class apps like Trello and Microsoft Planner.
 
-#### Phase 1: Fluid Card & List Interactions (High Impact)
+#### Phase 1: Fluid Card & List Interactions (High Impact) ✅ COMPLETED
 This phase focuses on making the core interactions of creating and manipulating cards feel seamless and satisfying.
 
-- **[ ] Hover-to-reveal 'Add Card' button:**
+- **[x] Hover-to-reveal 'Add Card' button:**
   - **Description:** Instead of a persistent "Add Card" button at the bottom of a list, a subtle `+ Add a card` button should appear only when a user hovers in the space below the last card in a bucket. This is less intrusive and more contextual.
   - **Implementation Details:**
     - **File:** `src/components/board/Bucket.tsx`.
     - **Logic:** The `div` wrapping the bucket's content should become a `group`. The `Button` (or a new `div` that looks like a button) will have `opacity-0 group-hover:opacity-100 transition-opacity` classes.
     - **Regression Guard:** This button will replace the logic that currently opens the `CreateCardDialog`, as this new pattern is for in-place creation.
 
-- **[ ] "Quick Add" in-place card creation:**
+- **[x] "Quick Add" in-place card creation:**
   - **Description:** Clicking the `+ Add a card` button should transform it directly into a `textarea` for the card title and a "Save Card" button, avoiding a disruptive dialog. Pressing `Enter` saves the card and adds another "quick add" input below it for rapid, multi-card creation. Pressing `Escape` cancels the action.
   - **Implementation Details:**
     - **File:** `src/components/board/Bucket.tsx`.
@@ -70,14 +86,14 @@ This phase focuses on making the core interactions of creating and manipulating 
     - **Logic:** When `isAddingCard` is true, render a `<form>` containing a `Textarea` and a `Button`. The `Textarea` should use `onKeyDown` to handle `Enter` (to submit the form) and `Escape` (to set `isAddingCard(false)`). The form's `onSubmit` handler will call the `createCard` store action.
     - **Data:** The `createCard` function must be called with `{ title, bucketId }`. The `bucketId` is available from the `Bucket.tsx` component's props.
 
-- **[ ] Subtle hover animations on cards:**
+- **[x] Subtle hover animations on cards:**
   - **Description:** When a user hovers over a card, it should gently "lift" with a subtle `box-shadow` increase and a slight `transform: translateY(-2px)`. This makes the cards feel more tangible and interactive.
   - **Implementation Details:**
     - **File:** `src/components/board/CardItem.tsx`.
     - **Logic:** Add `transition-all duration-200 ease-in-out` and `hover:shadow-lg hover:-translate-y-0.5` classes to the main wrapper `div` of the card.
     - **Regression Guard:** Ensure these classes do not interfere with the styles applied by `@dnd-kit` when `isDragging` is true. The `isDragging` styles should take precedence.
 
-- **[ ] Visual drag-and-drop placeholder:**
+- **[x] Visual drag-and-drop placeholder:**
   - **Description:** When dragging a card, the original space it occupied should show a dashed, semi-transparent placeholder. This gives the user a clear indicator of where the card came from and makes the board feel less jarring during moves.
   - **Implementation Details:**
     - **File:** `src/components/board/CardItem.tsx`.
@@ -85,32 +101,30 @@ This phase focuses on making the core interactions of creating and manipulating 
     - **Logic:** The `useSortable` hook provides an `isDragging` boolean. Use this to conditionally apply classes to the card's wrapper `div`: `cn({ 'opacity-50 border-dashed bg-muted': isDragging })}`.
     - **Drag Overlay:** To perfect the effect, the `DragOverlay` component from `@dnd-kit` should be used in `BoardView.tsx` to render a visually identical, non-translucent copy of the `CardItem` that follows the cursor during the drag operation.
 
-#### Phase 2: Keyboard Superpowers (High Impact for Power Users)
+#### Phase 2: Keyboard Superpowers (High Impact for Power Users) ✅ COMPLETED
 This phase is dedicated to making the app incredibly fast for keyboard-centric users.
 
-- **[ ] Contextual keyboard shortcuts on cards:**
-  - **Description:** When a card is "active" (e.g., clicked on), enable a suite of shortcuts: `e` to open the edit dialog, `l` for labels, `d` for due dates, `c` to complete/un-complete, and `Delete` for deletion (with an "Undo" toast).
+- **[x] Contextual keyboard shortcuts on cards:**
+  - **Description:** When hovering over a card, press `e` to open the edit dialog.
   - **Implementation Details:**
-    - **State:** Add `activeCardId: string | null` to the `useBoardStore`, along with an action `setActiveCardId`.
-    - **Activation:** In `CardItem.tsx`, add an `onClick` handler to the main card `div` that calls `setActiveCardId(card.id)`.
-    - **Listener:** Add a `useEffect` in `BoardView.tsx` to add/remove a global `keydown` event listener.
-    - **Visuals:** In `CardItem.tsx`, apply a visual indicator (e.g., a blue ring class like `ring-2 ring-blue-500`) when `useBoardStore(s => s.activeCardId) === card.id`.
-    - **Regression Guard:** The event listener callback *must* check if the user is typing in an input to prevent shortcuts from firing incorrectly. Start the callback with: `if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;`.
+    - **File:** `src/components/board/CardItem.tsx`.
+    - **Logic:** Uses a hover-based approach with `isHovered` state that triggers keyboard event listener.
+    - **Regression Guard:** The event listener checks if the user is typing in an input/textarea to prevent shortcuts from firing incorrectly.
 
-- **[ ] Global "Quick Add" shortcut:**
-  - **Description:** Pressing `n` anywhere in the app should open the `CreateCardDialog`, pre-populating the board/bucket based on the current view or the most recently used.
+- **[x] Global "Quick Add" shortcut:**
+  - **Description:** Pressing `n` anywhere in the app opens the `CreateCardDialog`, with context-aware list selection based on the currently hovered bucket.
   - **Implementation Details:**
-    - **File:** `app/layout.tsx` is the best place for a truly global listener.
-    - **Logic:** The listener will trigger a global state in a new `useUIStore` (to keep concerns separate) like `setCreateCardDialogOpen(true)`. The `CreateCardDialog` component will then listen to this state.
-    - **Context:** To pre-populate, the `useBoardStore` should track the `lastViewedBucketId`. When navigating, this value should be updated. The `CreateCardDialog` can then use this ID.
-    - **Regression Guard:** The global listener must also check `e.target` to avoid firing while in an input field.
+    - **File:** `src/components/layout/GlobalShortcuts.tsx`.
+    - **Logic:** The listener captures the `hoveredBucketId` at the moment `n` is pressed and passes it to CreateCardDialog.
+    - **Context:** The `useBoardStore` tracks `hoveredBucketId` which is updated on bucket hover.
+    - **Regression Guard:** The global listener checks `e.target` to avoid firing while in an input field.
 
-- **[ ] Command Palette (`Cmd/Ctrl + K`):**
+- **[x] Command Palette (`Cmd/Ctrl + K`):**
   - **Description:** A power-user feature to quickly search for and navigate to any board, card, or setting.
   - **Implementation Details:**
-    - **Library:** `cmdk` is the recommended library.
-    - **Component:** Create a new `CommandPalette.tsx` component, rendered conditionally in `app/layout.tsx`.
-    - **Data:** It will need to be populated with items from multiple Zustand stores: boards from `useBoardStore`, settings actions, etc. Each item will have a `name`, `action`, and `keywords`.
+    - **Library:** `cmdk` library is used.
+    - **Component:** `CommandPalette.tsx` component in `src/components/layout/`.
+    - **Data:** Populated with boards from `useBoardStore`, allowing quick navigation.
 
 #### Phase 3: Smarter UI & Feedback (Medium Impact)
 This phase focuses on small but crucial details that build user trust and make the app feel "smart".
@@ -175,6 +189,76 @@ This phase focuses on small but crucial details that build user trust and make t
 - [ ] Calendar integration
 - [ ] Gantt charts
 - [ ] Time tracking analytics
+
+## Security Architecture & Implementation Plan
+
+This plan outlines a phased approach to security, designed to evolve the application from its current local-first state to a secure, multi-user, cloud-enabled platform.
+
+### Phase 1: Securing the Local-First Application (Current State)
+This phase focuses on hardening the existing client-side application.
+
+- **[ ] Input Sanitization:**
+  - **Goal:** Prevent Cross-Site Scripting (XSS) where malicious code could be injected into card titles, descriptions, etc.
+  - **Implementation:** Before rendering any user-generated content (like card descriptions) that might contain HTML, use a library like `DOMPurify` to sanitize it. This strips out dangerous tags and attributes.
+  - **Action:** `npm install dompurify && npm install -D @types/dompurify`. In components that render rich text, wrap the content: `dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(card.description) }}`.
+
+- **[ ] Dependency Vulnerability Scanning:**
+  - **Goal:** Continuously check for known vulnerabilities in third-party `npm` packages.
+  - **Implementation:** Regularly run `npm audit`. Integrate this into the CI/CD pipeline so it runs automatically on every push.
+  - **Action:** Add a step to the future CI/CD workflow (e.g., in a `.github/workflows/ci.yml` file) that executes `npm audit --audit-level=high`.
+
+- **[ ] Content Security Policy (CSP):**
+  - **Goal:** Define a whitelist of approved sources for content (scripts, styles, images), mitigating the risk of injection attacks.
+  - **Implementation:** Use Next.js's built-in support for CSP headers. In `next.config.ts`, add a `headers` configuration to define a strict policy, allowing content only from your own domain and trusted third parties.
+
+### Phase 2: Authentication - Adding User Sign-In
+This phase introduces user accounts, a prerequisite for any cloud features.
+
+- **[ ] Authentication Strategy: OAuth & Passwordless**
+  - **Goal:** Provide secure, user-friendly sign-in without managing passwords directly.
+  - **Recommendation:** Use **NextAuth.js** (`next-auth`). It is the de-facto standard for Next.js, is highly secure, and provides simple integration for many OAuth providers (Google, GitHub, etc.).
+
+- **[ ] Implementation Plan for Google Sign-In:**
+  1.  **Install:** `npm install next-auth`.
+  2.  **Setup Google OAuth Credentials:** Go to the Google Cloud Console, create a new project, and get an OAuth 2.0 Client ID and Client Secret. Add these to your environment variables (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
+  3.  **Create API Route:** Create `src/app/api/auth/[...nextauth]/route.ts`. Configure it with the Google provider using the environment variables.
+  4.  **Wrap App in `SessionProvider`:** In `app/layout.tsx`, wrap the main component with the `<SessionProvider>`.
+  5.  **Create Sign-In/Out UI:** Add login and logout buttons that use the `signIn()` and `signOut()` methods from `next-auth/react`.
+  6.  **Extend Data Model:** Add a `User` table to the database schema (`id`, `name`, `email`, `image`) to store user profiles.
+
+### Phase 3: Authorization - Permissions & Sharing
+Once users exist, we need to control what they can see and do.
+
+- **[ ] Data Model for Permissions:**
+  - **Goal:** Define relationships between users, boards, and their roles.
+  - **Implementation:** Create a new "join table" in the database schema called `BoardMember`.
+  - **Schema:** `BoardMember { id: string, boardId: string, userId: string, role: 'owner' | 'editor' | 'viewer' }`. This table links a user to a board with a specific role.
+
+- **[ ] API-Level Access Control:**
+  - **Goal:** Ensure every action is authorized on the (future) backend.
+  - **Implementation:** Before any database operation (e.g., `updateCard`), create helper functions that check the user's role from the `BoardMember` table. For example: `const userRole = await getUserRole(userId, boardId); if (userRole !== 'owner' && userRole !== 'editor') { throw new Error("Unauthorized"); }`.
+
+- **[ ] Board Sharing UI:**
+  - **Goal:** Allow board owners to invite other users.
+  - **Implementation:** Create a "Share" button on the board that opens a dialog. The dialog will allow the owner to enter another user's email, select a role, and add them to the `BoardMember` table for that board.
+
+### Phase 4: Securing the Cloud Infrastructure (Future)
+When data moves from local-only to a cloud database.
+
+- **[ ] Secure Secrets Management:**
+  - **Goal:** Never commit sensitive credentials (API keys, database URLs, OAuth secrets) to Git.
+  - **Implementation:** Use the environment variable management provided by your hosting platform (e.g., Vercel, Netlify). Store all secrets there. For local development, use a `.env.local` file, which is already in your `.gitignore`.
+
+- **[ ] Secure Database Connection:**
+  - **Goal:** Ensure data is encrypted both in transit and at rest.
+  - **Implementation:** Use a managed database provider (e.g., Vercel Postgres, Supabase) that enforces SSL/TLS connections by default and encrypts data at rest.
+
+- **[ ] API Hardening:**
+  - **Goal:** Protect public-facing API endpoints from abuse.
+  - **Implementation:**
+    - **JWT Validation:** On every API request, validate the JWT provided by NextAuth.js to authenticate the user.
+    - **Rate Limiting:** Use a library like `express-rate-limit` or Vercel's built-in helpers to prevent brute-force attacks.
+    - **CORS:** Configure Cross-Origin Resource Sharing in `next.config.ts` to only allow requests from your application's domain.
 
 ## Technical Architecture
 
@@ -241,8 +325,20 @@ src/
 ├── components/         # React components
 │   ├── ui/            # shadcn/ui components
 │   ├── board/         # Board-specific components
+│   │   ├── edit-card/ # EditCardDialog sub-components
+│   │   │   ├── ChecklistManager.tsx
+│   │   │   ├── AssigneeManager.tsx
+│   │   │   └── LabelManager.tsx
+│   │   ├── BoardView.tsx
+│   │   ├── CardItem.tsx
+│   │   ├── EditCardDialog.tsx
+│   │   └── ...
 │   ├── dashboard/     # Dashboard components
-│   └── layout/        # Layout components
+│   ├── layout/        # Layout components
+│   │   ├── CommandPalette.tsx
+│   │   ├── GlobalShortcuts.tsx
+│   │   └── Sidebar.tsx
+│   └── ErrorBoundary.tsx
 ├── lib/               # Utilities and core logic
 │   ├── store/         # Zustand stores
 │   ├── db/            # Database schema and operations

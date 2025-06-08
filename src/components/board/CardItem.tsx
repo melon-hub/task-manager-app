@@ -181,7 +181,6 @@ export function CardItem({ card }: CardItemProps) {
               </div>
               {/* Action buttons inline with labels */}
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 -mr-1" onPointerDown={(e) => e.stopPropagation()}>
-                <kbd className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded font-mono">E</kbd>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -212,7 +211,6 @@ export function CardItem({ card }: CardItemProps) {
           {!(card.priority || (card.labels && card.labels.length > 0)) && (
             <div className="flex justify-end -mt-1 mb-1">
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity -mr-1" onPointerDown={(e) => e.stopPropagation()}>
-                <kbd className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded font-mono">E</kbd>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -300,7 +298,7 @@ export function CardItem({ card }: CardItemProps) {
                       // Visual dots for small checklists
                       <div className="flex items-center gap-0.5">
                         {card.checklist.map((item, index) => {
-                          const completedCount = card.checklist.filter(item => item.completed).length;
+                          const completedCount = card.checklist?.filter(item => item.completed).length || 0;
                           const isFilledIn = index < completedCount;
                           return (
                             <div

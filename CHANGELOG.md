@@ -8,22 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- (Add new features here)
+- Phase 1: Fluid Card & List Interactions
+  - Hover-to-reveal 'Add Card' button in buckets
+  - Quick Add in-place card creation with inline textarea
+  - Subtle hover animations on cards
+  - Visual drag-and-drop placeholder with dashed border
+- Phase 2: Keyboard Superpowers
+  - Press 'e' to edit when hovering over a card
+  - Press 'n' anywhere to create a new card (context-aware)
+  - Cmd/Ctrl+K opens command palette for quick navigation
+- Error boundaries for graceful error handling
+- Component composition improvements for better maintainability
 
 ### Changed
-- (Add changes to existing functionality here)
-
-### Deprecated
-- (Add deprecated features here)
-
-### Removed
-- (Add removed features here)
+- Refactored EditCardDialog into smaller, focused components:
+  - ChecklistManager: Handles checklist functionality with progress tracking
+  - AssigneeManager: Manages adding/removing assignees  
+  - LabelManager: Manages labels with drag-and-drop reordering
+- Improved drag-and-drop UX by removing grip handles for cleaner appearance
+- Made bucket hover indicators more subtle
+- Fixed TypeScript type safety issues throughout the codebase
 
 ### Fixed
-- (Add bug fixes here)
-
-### Security
-- (Add security updates here)
+- Fixed board type issues in dashboard
+- Fixed card.checklist TypeScript errors
+- Fixed label persistence with proper boardId and timestamps
+- Fixed priority filter type inference issues
+- Fixed SVG className handling in DebugOverlay
 
 ## [0.1.0] - 2025-01-08
 

@@ -1,11 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,48 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, ChecklistItem, Label as LabelType } from '@/types';
-import { Check, X, UserPlus, CalendarIcon, Plus, Square, CheckSquare, Tag } from 'lucide-react';
+import { Check, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { LabelPicker } from './LabelPicker';
-
-// Sortable label component
-function SortableLabel({ label }: { label: LabelType }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: label.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ ...style, backgroundColor: label.color }}
-      className="inline-flex items-center gap-0.5 rounded-sm text-xs font-medium text-white"
-      {...attributes}
-    >
-      <div
-        className="cursor-move opacity-60 hover:opacity-100 px-1"
-        {...listeners}
-      >
-        <GripVertical className="h-3 w-3" />
-      </div>
-      <span className="px-1.5 py-0.5">
-        {label.name}
-      </span>
-    </div>
-  );
-}
+import { ChecklistManager } from './edit-card/ChecklistManager';
+import { AssigneeManager } from './edit-card/AssigneeManager';
+import { LabelManager } from './edit-card/LabelManager';
 
 interface EditCardDialogProps {
   open: boolean;
@@ -86,9 +45,7 @@ export function EditCardDialog({ open, onOpenChange, card, onUpdateCard }: EditC
   const [dueDate, setDueDate] = useState('');
   const [completed, setCompleted] = useState(false);
   const [assignees, setAssignees] = useState<string[]>([]);
-  const [newAssignee, setNewAssignee] = useState('');
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
-  const [newChecklistItem, setNewChecklistItem] = useState('');
   const [labels, setLabels] = useState<LabelType[]>([]);
 
   useEffect(() => {
@@ -121,58 +78,6 @@ export function EditCardDialog({ open, onOpenChange, card, onUpdateCard }: EditC
     }
   };
 
-  const handleAddAssignee = () => {
-    if (newAssignee.trim() && !assignees.includes(newAssignee.trim())) {
-      setAssignees([...assignees, newAssignee.trim()]);
-      setNewAssignee('');
-    }
-  };
-
-  const handleRemoveAssignee = (assignee: string) => {
-    setAssignees(assignees.filter(a => a !== assignee));
-  };
-
-  const handleAddChecklistItem = () => {
-    if (newChecklistItem.trim()) {
-      const newItem: ChecklistItem = {
-        id: crypto.randomUUID(),
-        text: newChecklistItem.trim(),
-        completed: false,
-      };
-      setChecklist([...checklist, newItem]);
-      setNewChecklistItem('');
-    }
-  };
-
-  const handleToggleChecklistItem = (itemId: string) => {
-    setChecklist(checklist.map(item =>
-      item.id === itemId ? { ...item, completed: !item.completed } : item
-    ));
-  };
-
-  const handleRemoveChecklistItem = (itemId: string) => {
-    setChecklist(checklist.filter(item => item.id !== itemId));
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (active.id !== over?.id) {
-      setLabels((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
-  // Initialize sensors outside of conditional rendering
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   if (!card) return null;
 
@@ -291,149 +196,20 @@ export function EditCardDialog({ open, onOpenChange, card, onUpdateCard }: EditC
               </div>
             </div>
             
-            <div className="grid gap-2">
-              <Label>Labels</Label>
-              <div className="flex items-start gap-2">
-                <LabelPicker
-                  selectedLabels={labels}
-                  onLabelsChange={setLabels}
-                  trigger={
-                    <Button type="button" variant="outline" size="sm" className="gap-2">
-                      <Tag className="h-3 w-3" />
-                      Add Labels
-                    </Button>
-                  }
-                />
-                {labels.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">Drag to reorder labels</p>
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <SortableContext items={labels.map(l => l.id)} strategy={horizontalListSortingStrategy}>
-                        <div className="flex flex-wrap gap-1">
-                          {labels.map((label) => (
-                            <SortableLabel key={label.id} label={label} />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  </div>
-                )}
-              </div>
-            </div>
+            <LabelManager
+              labels={labels}
+              onChange={setLabels}
+            />
             
-            <div className="grid gap-2">
-              <Label htmlFor="edit-card-assignees">Assignees</Label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    id="edit-card-assignees"
-                    placeholder="Enter name..."
-                    value={newAssignee}
-                    onChange={(e) => setNewAssignee(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddAssignee();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleAddAssignee}
-                    disabled={!newAssignee.trim()}
-                  >
-                    <UserPlus className="h-4 w-4" />
-                  </Button>
-                </div>
-                {assignees.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {assignees.map((assignee) => (
-                      <Badge key={assignee} variant="secondary" className="gap-1">
-                        {assignee}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveAssignee(assignee)}
-                          className="ml-1 hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <AssigneeManager
+              assignees={assignees}
+              onChange={setAssignees}
+            />
             
-            <div className="grid gap-2">
-              <Label htmlFor="edit-card-checklist">Checklist</Label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    id="edit-card-checklist"
-                    placeholder="Add a checklist item..."
-                    value={newChecklistItem}
-                    onChange={(e) => setNewChecklistItem(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddChecklistItem();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleAddChecklistItem}
-                    disabled={!newChecklistItem.trim()}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                {checklist.length > 0 && (
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {checklist.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-2 p-2 rounded-md bg-muted/50 group"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleToggleChecklistItem(item.id)}
-                          className="flex-shrink-0"
-                        >
-                          {item.completed ? (
-                            <CheckSquare className="h-4 w-4 text-primary" />
-                          ) : (
-                            <Square className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </button>
-                        <span className={cn(
-                          "flex-1 text-sm",
-                          item.completed && "line-through text-muted-foreground"
-                        )}>
-                          {item.text}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveChecklistItem(item.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      </div>
-                    ))}
-                    <div className="text-xs text-muted-foreground text-right">
-                      {checklist.filter(item => item.completed).length}/{checklist.length} completed
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ChecklistManager
+              checklist={checklist}
+              onChange={setChecklist}
+            />
           </div>
           
           <DialogFooter>
