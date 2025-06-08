@@ -29,7 +29,6 @@ import {
 import { useBoardStore } from '@/lib/store/boardStore';
 import { useState } from 'react';
 import { EditCardDialog } from './EditCardDialog';
-import { DeleteDialog } from '@/components/ui/delete-dialog';
 
 interface CardContextMenuProps {
   card: Card;
@@ -39,7 +38,6 @@ interface CardContextMenuProps {
 export function CardContextMenu({ card, children }: CardContextMenuProps) {
   const { buckets, labels, updateCard, deleteCard, moveCard, createCard, cards } = useBoardStore();
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const currentBucket = buckets.find(b => b.id === card.bucketId);
   const availableBuckets = buckets.filter(b => b.boardId === currentBucket?.boardId);
@@ -230,7 +228,7 @@ export function CardContextMenu({ card, children }: CardContextMenuProps) {
           
           {/* Delete */}
           <ContextMenuItem
-            onClick={() => setShowDeleteDialog(true)}
+            onClick={() => deleteCard(card.id)}
             className="text-destructive focus:text-destructive"
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -246,13 +244,6 @@ export function CardContextMenu({ card, children }: CardContextMenuProps) {
         onUpdateCard={updateCard}
       />
       
-      <DeleteDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={() => deleteCard(card.id)}
-        title="Delete Card"
-        description="Are you sure you want to delete this card? This action cannot be undone."
-      />
     </>
   );
 }

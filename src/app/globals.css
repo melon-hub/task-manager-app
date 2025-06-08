@@ -186,4 +186,39 @@
   html.dark .bg-sidebar {
     background-color: oklch(0.3100 0.0283 267.7408);
   }
+  
+  /* Sonner toast customizations */
+  [data-sonner-toaster] {
+    font-family: var(--font-sans) !important;
+  }
+  
+  [data-sonner-toast] {
+    font-family: var(--font-sans) !important;
+    border-radius: var(--radius) !important;
+    font-size: 0.875rem !important;
+  }
+  
+  [data-sonner-toast][data-type="success"] {
+    background-color: hsl(var(--background)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  
+  [data-sonner-toast] [data-action] {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    padding: 0.375rem 0.75rem !important;
+    border-radius: calc(var(--radius) - 2px) !important;
+  }
+  
+  [data-sonner-toast] [data-action]:hover {
+    opacity: 0.9 !important;
+  }
+  
+  [data-sonner-toast] [data-close-button] {
+    background-color: hsl(var(--background)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
 }

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { EditCardDialog } from './EditCardDialog';
-import { DeleteDialog } from '@/components/ui/delete-dialog';
 import { cn } from '@/lib/utils';
 import { getRelativeDateString, getDueDateStatus } from '@/lib/utils/date';
 import { CardContextMenu } from './CardContextMenu';
@@ -22,7 +21,6 @@ interface CardItemProps {
 export function CardItem({ card }: CardItemProps) {
   const { deleteCard, updateCard } = useBoardStore();
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(card.title);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -180,7 +178,7 @@ export function CardItem({ card }: CardItemProps) {
                 )}
               </div>
               {/* Action buttons inline with labels */}
-              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 -mr-1" onPointerDown={(e) => e.stopPropagation()}>
+              <div className={cn("flex items-center gap-0.5 transition-opacity flex-shrink-0 -mr-1", isHovered ? "opacity-100" : "opacity-0")} onPointerDown={(e) => e.stopPropagation()}>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -198,7 +196,7 @@ export function CardItem({ card }: CardItemProps) {
                   className="h-6 w-6 text-destructive hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowDeleteDialog(true);
+                    handleDelete();
                   }}
                 >
                   <Trash2 className="h-3 w-3" />
@@ -210,7 +208,7 @@ export function CardItem({ card }: CardItemProps) {
           {/* Action buttons for cards without labels */}
           {!(card.priority || (card.labels && card.labels.length > 0)) && (
             <div className="flex justify-end -mt-1 mb-1">
-              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity -mr-1" onPointerDown={(e) => e.stopPropagation()}>
+              <div className={cn("flex items-center gap-0.5 transition-opacity -mr-1", isHovered ? "opacity-100" : "opacity-0")} onPointerDown={(e) => e.stopPropagation()}>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -228,7 +226,7 @@ export function CardItem({ card }: CardItemProps) {
                   className="h-6 w-6 text-destructive hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowDeleteDialog(true);
+                    handleDelete();
                   }}
                 >
                   <Trash2 className="h-3 w-3" />
@@ -363,13 +361,6 @@ export function CardItem({ card }: CardItemProps) {
         onUpdateCard={updateCard}
       />
       
-      <DeleteDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={handleDelete}
-        title="Delete Card"
-        description="Are you sure you want to delete this card? This action cannot be undone."
-      />
       
       {/* Portal tooltip for labels */}
       {showLabelTooltip && typeof document !== 'undefined' && createPortal(

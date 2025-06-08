@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Board, Bucket, Card, Label } from '@/types';
 import { db } from '@/lib/db/schema';
+import { toast } from 'sonner';
 
 interface FilterState {
   searchQuery: string;
@@ -20,6 +21,7 @@ interface BoardState {
   loading: boolean;
   filters: FilterState;
   hoveredBucketId: string | null;
+  recentlyDeleted: Map<string, { card: Card; timeoutId: NodeJS.Timeout; countdownInterval?: NodeJS.Timeout }>;
   
   // Actions
   loadBoard: (boardId: string) => Promise<void>;
@@ -32,6 +34,7 @@ interface BoardState {
   moveCard: (cardId: string, toBucketId: string, position: number) => Promise<void>;
   updateCard: (cardId: string, updates: Partial<Card>) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
+  undoDeleteCard: (cardId: string) => Promise<void>;
   deleteBucket: (bucketId: string) => Promise<void>;
   generateMockData: () => Promise<void>;
   
@@ -58,6 +61,7 @@ const defaultFilters: FilterState = {
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   currentBoard: null,
+  recentlyDeleted: new Map(),
   buckets: [],
   cards: [],
   labels: [],
@@ -256,9 +260,107 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   deleteCard: async (cardId: string) => {
-    const { cards } = get();
-    await db.cards.delete(cardId);
+    const { cards, recentlyDeleted } = get();
+    const card = cards.find(c => c.id === cardId);
+    if (!card) return;
+    
+    // Show toast FIRST for immediate feedback - before any state updates
+    toast.dismiss(cardId);
+    let seconds = 10;
+    
+    // Use Promise.resolve().then() to ensure toast shows immediately
+    Promise.resolve().then(() => {
+      toast.success(`Card deleted (${seconds}s)`, {
+        action: {
+          label: 'Undo',
+          onClick: () => get().undoDeleteCard(cardId),
+        },
+        duration: 10000,
+        id: cardId,
+      });
+    });
+    
+    // Then optimistically remove from UI
     set({ cards: cards.filter(c => c.id !== cardId) });
+    
+    // Store in recentlyDeleted map
+    recentlyDeleted.set(cardId, { card, timeoutId: null as any });
+    set({ recentlyDeleted: new Map(recentlyDeleted) });
+    
+    // Set up deletion timeout (10 seconds)
+    const timeoutId = setTimeout(async () => {
+      // Permanently delete from database
+      await db.cards.delete(cardId);
+      
+      // Remove from recentlyDeleted map
+      recentlyDeleted.delete(cardId);
+      set({ recentlyDeleted: new Map(recentlyDeleted) });
+    }, 10000);
+    
+    // Update the stored timeout
+    const deletedData = recentlyDeleted.get(cardId);
+    if (deletedData) {
+      deletedData.timeoutId = timeoutId;
+    }
+    
+    // Start countdown after a small delay to ensure toast is shown
+    setTimeout(() => {
+      const countdownInterval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+          toast.success(`Card deleted (${seconds}s)`, {
+            action: {
+              label: 'Undo',
+              onClick: () => get().undoDeleteCard(cardId),
+            },
+            duration: 10000,
+            id: cardId, // Keep the same ID to update the existing toast
+          });
+        } else {
+          clearInterval(countdownInterval);
+          // Dismiss the toast when countdown reaches 0
+          toast.dismiss(cardId);
+        }
+      }, 1000);
+      
+      // Store the interval so we can clear it on undo
+      const deletedData = recentlyDeleted.get(cardId);
+      if (deletedData) {
+        deletedData.countdownInterval = countdownInterval;
+      }
+    }, 100); // Small delay to ensure initial toast is rendered
+  },
+  
+  undoDeleteCard: async (cardId: string) => {
+    const { cards, recentlyDeleted } = get();
+    const deletedItem = recentlyDeleted.get(cardId);
+    
+    if (!deletedItem) {
+      toast.error('Unable to restore card');
+      return;
+    }
+    
+    // Cancel the deletion timeout
+    clearTimeout(deletedItem.timeoutId);
+    
+    // Clear the countdown interval
+    if (deletedItem.countdownInterval) {
+      clearInterval(deletedItem.countdownInterval);
+    }
+    
+    // Restore the card to the cards list
+    set({ 
+      cards: [...cards, deletedItem.card],
+      recentlyDeleted: new Map(Array.from(recentlyDeleted).filter(([id]) => id !== cardId))
+    });
+    
+    // Dismiss the delete toast before showing the restore toast
+    toast.dismiss(cardId);
+    
+    // Show a simple restore message without countdown
+    toast.success('Card restored', {
+      duration: 2000,
+    });
   },
 
   deleteBucket: async (bucketId: string) => {

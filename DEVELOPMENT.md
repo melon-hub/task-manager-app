@@ -41,14 +41,63 @@
 
 ### High Priority Improvements 🔥
 
-#### 1. Search & Filtering
+#### 1. Dashboard Refactoring for Intuitive Use
+- **Goal:** Transform the dashboard from a single, data-dense view into a focused, two-tab experience: an actionable to-do list ("My Tasks") and a powerful data overview ("Analytics & Insights").
+- **Core Problem:** The current dashboard serves two conflicting purposes (personal action vs. project analysis), leading to clutter and a lack of clear direction for the user.
+- **Solution:** Use a tabbed interface to separate these two contexts, with "My Tasks" as the default view.
+
+- **[ ] Step 1: Create the Tabbed Layout**
+  - **File:** `app/dashboard/page.tsx`
+  - **Library:** Use the `Tabs` component from `shadcn/ui`.
+  - **Implementation:**
+    - Create a `<Tabs defaultValue="my-tasks">` component at the top of the page.
+    - Define two `<TabsTrigger>` components: one for "My Tasks" (`value="my-tasks"`) and one for "Analytics & Insights" (`value="analytics"`).
+    - The existing filter bar (`Board`, `Date Range`, etc.) should be moved *inside* the "Analytics & Insights" tab content, as it's not relevant to the "My Tasks" view.
+
+- **[ ] Step 2: Build the "My Tasks" View**
+  - **Goal:** Provide a clean, scannable list of what the user needs to do now.
+  - **Implementation:**
+    1.  **Create New Component:** `src/components/dashboard/MyTasksView.tsx`.
+    2.  **Data Fetching:** In this component, fetch all cards and filter them into three groups (assuming a "current user" context, which can be mocked for now):
+        -   `Overdue & Due Today`: `!card.completed && card.dueDate <= today`
+        -   `Upcoming (Next 7 Days)`: `!card.completed && card.dueDate > today && card.dueDate <= nextWeek`
+        -   `No Due Date`: `!card.completed && !card.dueDate`
+    3.  **Create List Item Component:** `src/components/dashboard/TaskListItem.tsx`. This component will display the card title, priority, its board/list name (e.g., "Project Phoenix / In Progress"), and the formatted due date. It should also have a `Checkbox` for quick completion.
+    4.  **Layout:** Render the three lists, each with a clear heading. If a list is empty, show a congratulatory message (e.g., "🎉 No overdue tasks!").
+
+- **[ ] Step 3: Refactor the "Analytics & Insights" View**
+  - **Goal:** Move all existing analytics logic into its own self-contained component.
+  - **Implementation:**
+    1.  **Create New Component:** `src/components/dashboard/AnalyticsView.tsx`.
+    2.  **Move Logic:** Cut almost all of the existing state management, filtering logic, and chart rendering from `app/dashboard/page.tsx` and paste it into `AnalyticsView.tsx`.
+    3.  **Cleanup:** The `app/dashboard/page.tsx` file will become much simpler. It will primarily manage the tab state and render either `<MyTasksView />` or `<AnalyticsView />` inside the appropriate `<TabsContent>` block.
+
+- **[ ] Step 4: Final Integration**
+  - **File:** `app/dashboard/page.tsx`
+  - **Final Structure:**
+    ```tsx
+    <Tabs defaultValue="my-tasks">
+      <TabsList>
+        <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics & Insights</TabsTrigger>
+      </TabsList>
+      <TabsContent value="my-tasks">
+        <MyTasksView />
+      </TabsContent>
+      <TabsContent value="analytics">
+        <AnalyticsView />
+      </TabsContent>
+    </Tabs>
+    ```
+
+#### 2. Search & Filtering
 - [ ] Implement full-text search across cards
 - [ ] Add advanced filtering system
 - [ ] Create filter presets
 - [ ] Add keyboard shortcuts for search
 - [ ] Implement quick filters
 
-#### 2. Label System UX Improvements
+#### 3. Label System UX Improvements
 - [ ] Better keyboard navigation in label picker
 - [ ] Ability to reorder labels
 - [ ] Label groups/categories
@@ -57,7 +106,7 @@
 - [ ] Label usage statistics
 - [ ] Import/export label sets
 
-#### 3. Assignee Management
+#### 4. Assignee Management
 - [ ] Create people/team management in settings
 - [ ] Enhance assignee selection UI
 - [ ] Support multiple assignees with overlapping avatars
@@ -129,7 +178,7 @@ This phase is dedicated to making the app incredibly fast for keyboard-centric u
 #### Phase 3: Smarter UI & Feedback (Medium Impact)
 This phase focuses on small but crucial details that build user trust and make the app feel "smart".
 
-- **[ ] Actionable "Undo" on delete:**
+- **[x] Actionable "Undo" on delete:**
   - **Description:** When a card is deleted, instead of a confirmation dialog, immediately delete it from the UI and show a "toast" notification at the bottom of the screen: "Card deleted. [Undo]". Clicking "Undo" restores the card.
   - **Implementation Details:**
     - **Library:** `sonner` is recommended for its simplicity and built-in features.

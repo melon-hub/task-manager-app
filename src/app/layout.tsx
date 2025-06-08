@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DebugOverlay } from "@/components/debug/DebugOverlay";
 import { cookies } from 'next/headers';
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +47,23 @@ export default async function RootLayout({
             </main>
           </div>
           <DebugOverlay />
+          <Toaster 
+            position="bottom-center" 
+            expand={false}
+            richColors
+            theme={theme === 'dark' || theme === 'system' ? 'dark' : 'light'}
+            className="toaster"
+            toastOptions={{
+              classNames: {
+                toast: 'bg-background border-border shadow-lg',
+                title: 'text-foreground font-medium text-sm',
+                description: 'text-muted-foreground text-sm',
+                actionButton: 'bg-primary text-primary-foreground hover:bg-primary/90 font-medium',
+                cancelButton: 'bg-muted text-foreground hover:bg-muted/80',
+                closeButton: 'bg-background border-border hover:bg-muted',
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

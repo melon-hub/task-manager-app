@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Press 'e' to edit when hovering over a card
   - Press 'n' anywhere to create a new card (context-aware)
   - Cmd/Ctrl+K opens command palette for quick navigation
+- Phase 3: Smarter UI & Feedback
+  - Actionable "Undo" on delete - instant toast notifications with undo action
+  - 10-second countdown timer showing remaining time to undo
+  - Optimized toast performance for immediate feedback
 - Error boundaries for graceful error handling
 - Component composition improvements for better maintainability
 
@@ -35,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed label persistence with proper boardId and timestamps
 - Fixed priority filter type inference issues
 - Fixed SVG className handling in DebugOverlay
+- Fixed edit/delete buttons showing for all cards on hover (now only shows for hovered card)
+- Fixed toast styling to match app's design system
+- Fixed toast countdown getting stuck at 1 second
+- Fixed overlapping toasts when rapidly deleting/undoing cards
+- Optimized initial toast appearance speed for better performance
 
 ## [0.1.0] - 2025-01-08
 
