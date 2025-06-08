@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useBoardStore } from '@/lib/store/boardStore';
+import { usePreferencesStore } from '@/lib/store/preferencesStore';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Tag, Plus, Square, CheckSquare, X, UserPlus } from 'lucide-react';
+import { CalendarIcon, Tag, Plus, Square, CheckSquare, X, Check, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label as LabelType, ChecklistItem } from '@/types';
 import { LabelPicker } from './LabelPicker';
@@ -41,14 +42,16 @@ interface CreateCardDialogProps {
 }
 
 export function CreateCardDialog({ open, onOpenChange, onCreateCard, targetBucketName, showBucketSelector = false, defaultBucketId }: CreateCardDialogProps) {
-  const { buckets } = useBoardStore();
+  const { buckets, labels: boardLabels } = useBoardStore();
+  const { users } = usePreferencesStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | ''>('');
   const [dueDate, setDueDate] = useState('');
   const [labels, setLabels] = useState<LabelType[]>([]);
   const [assignees, setAssignees] = useState<string[]>([]);
-  const [newAssignee, setNewAssignee] = useState('');
+  const [showAssigneePicker, setShowAssigneePicker] = useState(false);
+  const [showLabelPicker, setShowLabelPicker] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [selectedBucketId, setSelectedBucketId] = useState<string>('');
@@ -69,7 +72,8 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard, targetBucke
       setDueDate('');
       setLabels([]);
       setAssignees([]);
-      setNewAssignee('');
+      setShowAssigneePicker(false);
+      setShowLabelPicker(false);
       setChecklist([]);
       setNewChecklistItem('');
       setSelectedBucketId('');
@@ -94,15 +98,16 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard, targetBucke
     }
   };
 
-  const handleAddAssignee = () => {
-    if (newAssignee.trim() && !assignees.includes(newAssignee.trim())) {
-      setAssignees([...assignees, newAssignee.trim()]);
-      setNewAssignee('');
+  const handleToggleAssignee = (userId: string) => {
+    if (assignees.includes(userId)) {
+      setAssignees(assignees.filter(a => a !== userId));
+    } else {
+      setAssignees([...assignees, userId]);
     }
   };
 
-  const handleRemoveAssignee = (assignee: string) => {
-    setAssignees(assignees.filter(a => a !== assignee));
+  const handleRemoveAssignee = (assigneeId: string) => {
+    setAssignees(assignees.filter(a => a !== assigneeId));
   };
 
   const handleAddChecklistItem = () => {
@@ -125,6 +130,15 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard, targetBucke
 
   const handleRemoveChecklistItem = (itemId: string) => {
     setChecklist(checklist.filter(item => item.id !== itemId));
+  };
+
+  const handleToggleLabel = (label: LabelType) => {
+    const isSelected = labels.some(l => l.id === label.id);
+    if (isSelected) {
+      setLabels(labels.filter(l => l.id !== label.id));
+    } else {
+      setLabels([...labels, label]);
+    }
   };
 
   return (
@@ -243,76 +257,147 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard, targetBucke
             </div>
             
             <div className="grid gap-2">
-              <Label>Labels</Label>
-              <div className="flex items-start gap-2">
-                <LabelPicker
-                  selectedLabels={labels}
-                  onLabelsChange={setLabels}
-                  trigger={
-                    <Button type="button" variant="outline" size="sm" className="gap-2">
-                      <Tag className="h-3 w-3" />
-                      Add Labels
+              <div className="flex items-center justify-between">
+                <Label>Labels</Label>
+                <Popover open={showLabelPicker} onOpenChange={setShowLabelPicker}>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                      <Plus className="h-3 w-3 mr-1" />
+                      Create
                     </Button>
-                  }
-                />
-                {labels.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {labels.map((label) => (
-                      <span
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0" align="end">
+                    <LabelPicker
+                      selectedLabels={labels}
+                      onLabelsChange={setLabels}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              {boardLabels.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {boardLabels.map((label) => {
+                    const isSelected = labels.some(l => l.id === label.id);
+                    return (
+                      <button
                         key={label.id}
-                        className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium text-white"
-                        style={{ backgroundColor: label.color }}
+                        type="button"
+                        onClick={() => handleToggleLabel(label)}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium transition-all",
+                          isSelected
+                            ? "ring-2 ring-offset-1 ring-primary scale-105"
+                            : "opacity-60 hover:opacity-100 hover:scale-105"
+                        )}
+                        style={{ 
+                          backgroundColor: label.color,
+                          color: 'white'
+                        }}
                       >
                         {label.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                        {isSelected && <X className="h-3 w-3 ml-0.5" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-3 border-2 border-dashed rounded-md">
+                  No labels created yet.
+                  <br />
+                  <button
+                    type="button"
+                    onClick={() => setShowLabelPicker(true)}
+                    className="text-primary hover:underline"
+                  >
+                    Create your first label
+                  </button>
+                </div>
+              )}
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="card-assignees">Assignees</Label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    id="card-assignees"
-                    placeholder="Enter name..."
-                    value={newAssignee}
-                    onChange={(e) => setNewAssignee(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddAssignee();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleAddAssignee}
-                    disabled={!newAssignee.trim()}
-                  >
-                    <UserPlus className="h-4 w-4" />
-                  </Button>
-                </div>
-                {assignees.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {assignees.map((assignee) => (
-                      <Badge key={assignee} variant="secondary" className="gap-1">
-                        {assignee}
+              <Label>Assignees</Label>
+              {assignees.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {assignees.map((assigneeId) => {
+                    const user = users.find(u => u.id === assigneeId);
+                    if (!user) return null;
+                    
+                    return (
+                      <Badge key={assigneeId} variant="secondary" className="gap-1">
+                        <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center">
+                          <span className="text-[10px] font-medium">{user.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        {user.name}
                         <button
                           type="button"
-                          onClick={() => handleRemoveAssignee(assignee)}
+                          onClick={() => handleRemoveAssignee(assigneeId)}
                           className="ml-1 hover:text-destructive"
                         >
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
-                    ))}
+                    );
+                  })}
+                </div>
+              )}
+              
+              <Popover open={showAssigneePicker} onOpenChange={setShowAssigneePicker}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="w-full">
+                    <Users className="mr-2 h-4 w-4" />
+                    {assignees.length > 0 ? 'Manage Assignees' : 'Add Assignees'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <div className="p-3 border-b">
+                    <h4 className="font-medium text-sm">Assign Team Members</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Click to assign or unassign</p>
                   </div>
-                )}
-              </div>
+                  
+                  <div className="max-h-64 overflow-y-auto p-2">
+                    {users.length === 0 ? (
+                      <div className="text-center py-4 text-sm text-muted-foreground">
+                        No users added yet.
+                        <br />
+                        Go to Settings to add team members.
+                      </div>
+                    ) : (
+                      users.map((user) => (
+                        <button
+                          key={user.id}
+                          type="button"
+                          className="w-full flex items-center gap-3 p-2 rounded hover:bg-accent transition-colors"
+                          onClick={() => handleToggleAssignee(user.id)}
+                        >
+                          <div
+                            className={cn(
+                              "w-4 h-4 rounded border-2",
+                              assignees.includes(user.id)
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground"
+                            )}
+                          >
+                            {assignees.includes(user.id) && (
+                              <Check className="h-3 w-3 text-primary-foreground" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-1 text-left">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-medium">{user.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{user.name}</p>
+                              {user.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="grid gap-2">
@@ -324,7 +409,7 @@ export function CreateCardDialog({ open, onOpenChange, onCreateCard, targetBucke
                     placeholder="Add a checklist item..."
                     value={newChecklistItem}
                     onChange={(e) => setNewChecklistItem(e.target.value)}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         handleAddChecklistItem();

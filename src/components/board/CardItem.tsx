@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckSquare, Edit2, Trash2, Check } from 'lucide-react';
 import { useBoardStore } from '@/lib/store/boardStore';
+import { usePreferencesStore } from '@/lib/store/preferencesStore';
 import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -20,6 +21,7 @@ interface CardItemProps {
 
 export function CardItem({ card }: CardItemProps) {
   const { deleteCard, updateCard } = useBoardStore();
+  const { users } = usePreferencesStore();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(card.title);
@@ -44,9 +46,9 @@ export function CardItem({ card }: CardItemProps) {
   });
 
   const priorityColors = {
-    high: { bg: 'bg-red-50 dark:bg-red-950/20', text: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800' },
-    medium: { bg: 'bg-yellow-50 dark:bg-yellow-950/20', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-200 dark:border-yellow-800' },
-    low: { bg: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' },
+    high: { bg: 'bg-red-50 dark:bg-red-950/20', text: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800', borderL: 'border-l-red-500' },
+    medium: { bg: 'bg-yellow-50 dark:bg-yellow-950/20', text: 'text-yellow-600 dark:text-yellow-400', border: 'border-yellow-200 dark:border-yellow-800', borderL: 'border-l-yellow-500' },
+    low: { bg: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', borderL: 'border-l-blue-500' },
   };
 
   const style = {
@@ -125,6 +127,8 @@ export function CardItem({ card }: CardItemProps) {
           className={cn(
             "bg-card text-card-foreground rounded-lg border shadow-sm",
             "p-2.5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ease-in-out group relative",
+            "border-l-4",
+            card.priority ? priorityColors[card.priority].borderL : 'border-l-transparent',
             card.completed && "opacity-60",
             isDragging && "border-dashed border-muted-foreground/50 bg-muted/20"
           )}
@@ -138,24 +142,11 @@ export function CardItem({ card }: CardItemProps) {
           {...listeners}
           className="cursor-grab active:cursor-grabbing"
         >
-          {/* Priority, labels and action buttons */}
-          {(card.priority || (card.labels && card.labels.length > 0)) && (
+          {/* Labels and action buttons */}
+          {(card.labels && card.labels.length > 0) && (
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-1 flex-wrap">
-                {card.priority && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium capitalize",
-                      priorityColors[card.priority].bg,
-                      priorityColors[card.priority].text,
-                      "border",
-                      priorityColors[card.priority].border
-                    )}
-                  >
-                    {card.priority}
-                  </span>
-                )}
-                {card.labels && card.labels.slice(0, 2).map((label) => (
+                {card.labels.slice(0, 3).map((label) => (
                   <span
                     key={label.id}
                     className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium text-white"
@@ -164,20 +155,20 @@ export function CardItem({ card }: CardItemProps) {
                     {label.name}
                   </span>
                 ))}
-                {card.labels && card.labels.length > 2 && (
-                  <div 
+                {card.labels.length > 3 && (
+                  <div
                     ref={labelTriggerRef}
                     className="inline-flex"
                     onMouseEnter={() => setShowLabelTooltip(true)}
                     onMouseLeave={() => setShowLabelTooltip(false)}
                   >
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground cursor-help">
-                      +{card.labels.length - 2}
+                      +{card.labels.length - 3}
                     </span>
                   </div>
                 )}
               </div>
-              {/* Action buttons inline with labels */}
+              {/* Action buttons appear on hover */}
               <div className={cn("flex items-center gap-0.5 transition-opacity flex-shrink-0 -mr-1", isHovered ? "opacity-100" : "opacity-0")} onPointerDown={(e) => e.stopPropagation()}>
                 <Button
                   size="icon"
@@ -205,9 +196,9 @@ export function CardItem({ card }: CardItemProps) {
             </div>
           )}
           
-          {/* Action buttons for cards without labels */}
-          {!(card.priority || (card.labels && card.labels.length > 0)) && (
-            <div className="flex justify-end -mt-1 mb-1">
+          {/* Action buttons for cards without labels (they need a home) */}
+          {(!card.labels || card.labels.length === 0) && (
+            <div className="flex justify-end -mt-1 mb-1 min-h-[22px]">
               <div className={cn("flex items-center gap-0.5 transition-opacity -mr-1", isHovered ? "opacity-100" : "opacity-0")} onPointerDown={(e) => e.stopPropagation()}>
                 <Button
                   size="icon"
@@ -332,15 +323,19 @@ export function CardItem({ card }: CardItemProps) {
               </div>
               {card.assignees && card.assignees.length > 0 && (
                 <div className="flex -space-x-2">
-                  {card.assignees.slice(0, 3).map((assignee, index) => (
-                    <div
-                      key={index}
-                      className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium border-2 border-background"
-                      title={assignee}
-                    >
-                      {assignee.slice(0, 2).toUpperCase()}
-                    </div>
-                  ))}
+                  {card.assignees.slice(0, 3).map((assigneeId, index) => {
+                    const user = users.find(u => u.id === assigneeId);
+                    const displayName = user ? user.name : 'Unknown';
+                    return (
+                      <div
+                        key={index}
+                        className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium border-2 border-background"
+                        title={displayName}
+                      >
+                        <span className="text-foreground">{displayName.charAt(0).toUpperCase()}</span>
+                      </div>
+                    );
+                  })}
                   {card.assignees.length > 3 && (
                     <div className="h-6 w-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-medium border-2 border-background">
                       +{card.assignees.length - 3}

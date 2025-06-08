@@ -1,9 +1,10 @@
 'use client';
 
 import { useBoardStore } from '@/lib/store/boardStore';
+import { usePreferencesStore } from '@/lib/store/preferencesStore';
 import { Button } from '@/components/ui/button';
 import { Card as CardUI } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Plus, Star } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, closestCenter, DragStartEvent, DragOverEvent, pointerWithin, rectIntersection } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useState, useEffect } from 'react';
@@ -16,11 +17,13 @@ import { FilterBar } from './FilterBar';
 
 export function BoardView() {
   const { currentBoard, buckets, cards, createBucket, moveCard, moveBucket, generateMockData, getFilteredCards } = useBoardStore();
+  const { favoriteBoards, toggleFavoriteBoard } = usePreferencesStore();
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [showCreateBucketDialog, setShowCreateBucketDialog] = useState(false);
 
   // Use filtered cards instead of raw cards
   const filteredCards = getFilteredCards();
+  const isFavorite = currentBoard && favoriteBoards.includes(currentBoard.id);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -179,7 +182,17 @@ export function BoardView() {
     <div className="h-full flex flex-col">
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="px-6 py-3 flex items-center gap-4">
-          <h1 className="text-xl font-bold flex-shrink-0">{currentBoard.title}</h1>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <h1 className="text-xl font-bold">{currentBoard.title}</h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => currentBoard && toggleFavoriteBoard(currentBoard.id)}
+            >
+              <Star className={`h-4 w-4 ${isFavorite ? 'fill-current text-yellow-500' : ''}`} />
+            </Button>
+          </div>
           <div className="flex-1">
             <FilterBar />
           </div>

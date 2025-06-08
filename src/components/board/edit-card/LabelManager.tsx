@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Tag, X } from 'lucide-react';
+import { Tag, X, Plus, Settings } from 'lucide-react';
 import { LabelPicker } from '../LabelPicker';
+import { useBoardStore } from '@/lib/store/boardStore';
+import { cn } from '@/lib/utils';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -63,6 +65,7 @@ interface LabelManagerProps {
 
 export function LabelManager({ labels, onChange }: LabelManagerProps) {
   const [showLabelPicker, setShowLabelPicker] = useState(false);
+  const { labels: boardLabels } = useBoardStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -89,47 +92,104 @@ export function LabelManager({ labels, onChange }: LabelManagerProps) {
     onChange(labels.filter(l => l.id !== labelId));
   };
 
+  const handleToggleLabel = (label: LabelType) => {
+    const isSelected = labels.some(l => l.id === label.id);
+    if (isSelected) {
+      onChange(labels.filter(l => l.id !== label.id));
+    } else {
+      onChange([...labels, label]);
+    }
+  };
+
   return (
     <div className="grid gap-2">
-      <Label>Labels</Label>
+      <div className="flex items-center justify-between">
+        <Label>Labels</Label>
+        <Popover open={showLabelPicker} onOpenChange={setShowLabelPicker}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs">
+              <Settings className="h-3 w-3 mr-1" />
+              Manage
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="p-0" align="end">
+            <LabelPicker
+              selectedLabels={labels}
+              onLabelsChange={onChange}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
       
-      {labels.length > 0 && (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={labels}
-            strategy={horizontalListSortingStrategy}
-          >
-            <div className="flex flex-wrap gap-1">
-              {labels.map((label) => (
-                <SortableLabel
-                  key={label.id}
-                  label={label}
-                  onRemove={() => handleRemoveLabel(label.id)}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+      {/* Available Labels */}
+      {boardLabels.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {boardLabels.map((label) => {
+            const isSelected = labels.some(l => l.id === label.id);
+            return (
+              <button
+                key={label.id}
+                type="button"
+                onClick={() => handleToggleLabel(label)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium transition-all",
+                  isSelected
+                    ? "ring-2 ring-offset-1 ring-primary scale-105"
+                    : "opacity-60 hover:opacity-100 hover:scale-105"
+                )}
+                style={{ 
+                  backgroundColor: label.color,
+                  color: 'white'
+                }}
+              >
+                {label.name}
+                {isSelected && <X className="h-3 w-3 ml-0.5" />}
+              </button>
+            );
+          })}
+        </div>
       )}
       
-      <Popover open={showLabelPicker} onOpenChange={setShowLabelPicker}>
-        <PopoverTrigger asChild>
-          <Button type="button" variant="outline" size="sm" className="w-full">
-            <Tag className="mr-2 h-4 w-4" />
-            {labels.length > 0 ? 'Manage Labels' : 'Add Labels'}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0" align="start">
-          <LabelPicker
-            selectedLabels={labels}
-            onLabelsChange={onChange}
-          />
-        </PopoverContent>
-      </Popover>
+      {boardLabels.length === 0 && (
+        <div className="text-sm text-muted-foreground text-center py-3 border-2 border-dashed rounded-md">
+          No labels created yet.
+          <br />
+          <button
+            type="button"
+            onClick={() => setShowLabelPicker(true)}
+            className="text-primary hover:underline"
+          >
+            Create your first label
+          </button>
+        </div>
+      )}
+      
+      {/* Selected Labels with Drag & Drop */}
+      {labels.length > 0 && (
+        <div className="pt-2 border-t">
+          <p className="text-xs text-muted-foreground mb-2">Selected labels (drag to reorder):</p>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={labels}
+              strategy={horizontalListSortingStrategy}
+            >
+              <div className="flex flex-wrap gap-1">
+                {labels.map((label) => (
+                  <SortableLabel
+                    key={label.id}
+                    label={label}
+                    onRemove={() => handleRemoveLabel(label.id)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </div>
+      )}
     </div>
   );
 }

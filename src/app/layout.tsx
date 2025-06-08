@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { DebugOverlay } from "@/components/debug/DebugOverlay";
 import { cookies } from 'next/headers';
 import { Toaster } from 'sonner';
+import { Toaster as ShadcnToaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -64,6 +65,7 @@ export default async function RootLayout({
               },
             }}
           />
+          <ShadcnToaster />
         </ThemeProvider>
       </body>
     </html>
