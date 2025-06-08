@@ -1,0 +1,94 @@
+{
+  "commands": [
+    {
+      "name": "test",
+      "description": "Run tests for the current component or all tests",
+      "instruction": "Run the appropriate test command. If a specific file is mentioned, run tests for that file only. Otherwise run all tests with: npm test"
+    },
+    {
+      "name": "component",
+      "description": "Create a new React component with TypeScript",
+      "instruction": "Create a new React component with TypeScript interface, proper imports, and following the project's component patterns. Use shadcn/ui components where applicable. Include: Proper TypeScript interface, shadcn/ui integration if UI component, Error boundary if needed, Loading/error states, Basic tests, Storybook story (if applicable)"
+    },
+    {
+      "name": "preview",
+      "description": "Start the development server and preview changes",
+      "instruction": "Run 'npm run dev' and provide the preview URL (http://localhost:3000). Remind the user to check their browser."
+    },
+    {
+      "name": "add-shadcn",
+      "description": "Add a new shadcn/ui component",
+      "instruction": "Run 'npx shadcn@latest add [component-name]' to add the specified shadcn/ui component. List available components if none specified."
+    },
+    {
+      "name": "db-reset",
+      "description": "Reset the local IndexedDB database",
+      "instruction": "Provide instructions to reset the IndexedDB database in the browser DevTools: Application tab → Storage → IndexedDB → Delete Database"
+    },
+    {
+      "name": "lint-fix",
+      "description": "Run linter and fix auto-fixable issues",
+      "instruction": "Run 'npm run lint' to check for issues. If there are auto-fixable issues, provide the command to fix them."
+    },
+    {
+      "name": "analyze-performance",
+      "description": "Analyze component performance and suggest optimizations",
+      "instruction": "Analyze the current component or page for performance issues. Look for: unnecessary re-renders, missing memoization, large bundle sizes, unoptimized images, and suggest React performance best practices."
+    },
+    {
+      "name": "create-bucket",
+      "description": "Generate code for creating a new bucket/column",
+      "instruction": "Generate the code to create a new bucket using the boardStore. Include the proper TypeScript types and Zustand store action."
+    },
+    {
+      "name": "debug-store",
+      "description": "Debug the current Zustand store state",
+      "instruction": "Provide code to log the current state of boardStore and instructions on how to inspect it in browser DevTools. Include how to access the store from the console."
+    },
+    {
+      "name": "add-feature",
+      "description": "Add a new feature to the Kanban board",
+      "instruction": "Add a new feature to the Kanban board. Steps: 1. Update database schema if needed, 2. Create/update Zustand store, 3. Build UI components, 4. Add drag & drop if applicable, 5. Include proper TypeScript types, 6. Add tests, 7. Update documentation"
+    },
+    {
+      "name": "optimize-performance",
+      "description": "Analyze and optimize performance",
+      "instruction": "Analyze and optimize performance. Check: 1. Bundle size impact, 2. Re-render frequency, 3. Database query efficiency, 4. Memory leaks, 5. Event listener cleanup. Provide specific recommendations and implementation."
+    },
+    {
+      "name": "debug",
+      "description": "Debug an issue systematically",
+      "instruction": "Ultrathink about the problem, then: 1. Reproduce the Issue (verify steps, check console, examine DevTools, review Network tab), 2. Analyze Root Cause (check recent commits, review store actions, verify IndexedDB integrity, test browsers), 3. Implement Fix (minimal fix, add error handling, include tests, document solution), 4. Verify Resolution (test original scenario, check edge cases, ensure no new issues)"
+    },
+    {
+      "name": "architect",
+      "description": "Design architecture for a feature",
+      "instruction": "Think hard about scalability and maintainability, then provide: Architecture Overview (high-level design, component hierarchy, state management, database schema), Technical Decisions (why this approach, performance implications, scalability, extensibility), Implementation Plan (database changes, state setup, core components, integration points, migration strategy), Potential Challenges (technical risks, performance bottlenecks, UX considerations, backward compatibility)"
+    },
+    {
+      "name": "orchestrate",
+      "description": "Orchestrate complete implementation",
+      "instruction": "Think harder about the complete implementation flow, then create phases: Phase 1: Planning & Design (technical spec, database schema, state management, UI mockups, API contracts), Phase 2: Foundation (database changes, Zustand stores, base components, TypeScript types), Phase 3: Core Implementation (main functionality, drag & drop, offline support, loading states), Phase 4: Polish & Testing (error handling, edge cases, comprehensive tests, performance), Phase 5: Documentation & Deploy (update README, inline docs, user guide, deployment checklist)"
+    },
+    {
+      "name": "breakdown-feature",
+      "description": "Break down a feature into tasks",
+      "instruction": "Ultrathink about all aspects, then create: Feature Analysis (user story, acceptance criteria), Technical Breakdown (database layer with schema, state management with actions, UI components list, business logic functions, integration points), Implementation Tasks (Priority 1: Core functionality with time estimates, Priority 2: Enhanced UX, Priority 3: Polish), Testing Strategy (unit, integration, E2E, manual), Rollout Plan (feature flag, beta testing, gradual rollout, monitoring)"
+    },
+    {
+      "name": "refactor-smart",
+      "description": "Intelligently refactor code",
+      "instruction": "Think about code quality and maintainability, then: 1. Analyze Current Implementation (identify code smells, find duplicate logic, check complexity metrics, review TypeScript usage), 2. Plan Refactoring (define target architecture, list breaking changes, create migration path, estimate effort), 3. Execute Refactoring (extract reusable hooks, consolidate similar components, improve type safety, optimize bundle size), 4. Validate Changes (run existing tests, add new test coverage, performance comparison, bundle size analysis)"
+    },
+    {
+      "name": "test-comprehensive",
+      "description": "Create comprehensive tests",
+      "instruction": "Create comprehensive tests. Test Planning: 1. Identify all code paths, 2. Define test scenarios, 3. Consider edge cases, 4. Plan integration tests. Test Implementation: Unit tests with Jest, Component tests with React Testing Library, Integration tests for data flow, E2E tests for critical paths. Coverage Goals: Line coverage >90%, Branch coverage >85%, Critical paths 100%. Generate test files with proper mocking and assertions."
+    },
+    {
+      "name": "review-pr",
+      "description": "Review PR/changes thoroughly",
+      "instruction": "Think deeply about code quality, then provide: Code Review Checklist - Architecture & Design (follows patterns, appropriate abstraction, no over-engineering, scalable), Code Quality (strict TypeScript, no console.logs, error handling, DRY code), Functionality (meets requirements, edge cases handled, offline support, no regressions), Performance (no unnecessary re-renders, efficient algorithms, proper memoization, bundle size), Testing (adequate coverage, meaningful tests, E2E scenarios), Documentation (self-documenting code, complex logic explained, README updated). Provide specific feedback and overall assessment."
+    }
+  ]
+}
