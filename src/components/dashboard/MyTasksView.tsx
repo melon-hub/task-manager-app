@@ -5,7 +5,9 @@ import { db } from '@/lib/db/schema';
 import { usePreferencesStore } from '@/lib/store/preferencesStore';
 import { Board, Card as CardType, Bucket } from '@/types';
 import { startOfDay, isBefore, isToday, isAfter, addDays, isThisWeek } from 'date-fns';
+import { getRelativeDateString } from '@/lib/utils/date';
 import { TaskListItem } from './TaskListItem';
+import { UnassignedTasksColumn } from './UnassignedTasksColumn';
 import { Loader2, CalendarX, CalendarCheck, CalendarClock, Calendar, Inbox, User, Users, CheckSquare, AlertCircle, TrendingUp, Clock, Layers, Search, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
@@ -29,6 +31,7 @@ export function MyTasksView() {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [allAssignees, setAllAssignees] = useState<string[]>([]);
+  const [recentlyCompletedCards, setRecentlyCompletedCards] = useState<CardType[]>([]);
 
   // Function to remove a card from local state
   const removeCardFromState = (cardId: string) => {
@@ -45,8 +48,9 @@ export function MyTasksView() {
     if (activeUser === null && users.length > 0) {
       setActiveUser(users[0].id);
     }
-    
-    const loadData = async () => {
+  }, [activeUser, users, setActiveUser]);
+
+  const loadData = async () => {
       setIsLoading(true);
       try {
         const [boardsData, bucketsData, cardsData] = await Promise.all([
@@ -59,6 +63,17 @@ export function MyTasksView() {
         
         const activeCards = cardsData.filter(c => !c.completed)
         setAllCards(activeCards);
+        
+        // Get recently completed cards (completed in last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const completedCards = cardsData
+          .filter(c => c.completed && c.updatedAt && new Date(c.updatedAt) >= sevenDaysAgo)
+          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          .slice(0, 10); // Show max 10 recent completed
+        
+        setRecentlyCompletedCards(completedCards);
 
         // Get unique assignee IDs from cards
         const assigneeIds = new Set<string>();
@@ -75,6 +90,8 @@ export function MyTasksView() {
         setIsLoading(false);
       }
     };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -230,7 +247,9 @@ export function MyTasksView() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 max-w-full">
+      {/* Main content - My Tasks */}
+      <div className="space-y-6">
       {/* Header with controls */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
@@ -439,6 +458,67 @@ export function MyTasksView() {
               ))}
           </>
         )}
+      </div>
+
+      {/* Recently Completed Section */}
+      {recentlyCompletedCards.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+            <CheckSquare className="mr-2 h-5 w-5 text-green-500" />
+            Recently Completed
+          </h2>
+          <Card className="p-4">
+            <div className="space-y-2">
+              {recentlyCompletedCards
+                .filter(card => {
+                  // Apply user filter to completed cards too
+                  if (activeUser === 'unassigned') {
+                    return !card.assignees || card.assignees.length === 0;
+                  }
+                  return card.assignees?.includes(activeUser || '');
+                })
+                .map(card => {
+                  const bucket = buckets.find(b => b.id === card.bucketId);
+                  const board = bucket ? boards.find(b => b.id === bucket.boardId) : undefined;
+                  const task = {
+                    ...card,
+                    board: { id: board?.id || '', title: board?.title || 'Unknown Board' },
+                    list: { title: bucket?.title || 'Unknown List' },
+                  };
+                  
+                  return (
+                    <div key={task.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <span className="text-sm line-through text-muted-foreground">
+                          {task.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          • {task.board.title} / {task.list.title}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {task.updatedAt && getRelativeDateString(new Date(task.updatedAt))}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </Card>
+        </div>
+      )}
+      </div>
+
+      {/* Right sidebar - Unassigned Tasks */}
+      <div className="hidden lg:block">
+        <div className="sticky top-6">
+          <UnassignedTasksColumn 
+            onTaskClaimed={() => {
+              // Reload data when a task is claimed
+              loadData();
+            }}
+          />
+        </div>
       </div>
     </div>
   );

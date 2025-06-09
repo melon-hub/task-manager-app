@@ -26,10 +26,12 @@ interface PreferencesStore {
   dashboardPreferences: DashboardPreferences;
   activeUser: string | null;
   favoriteBoards: string[];
+  showMyTasksInBoard: boolean;
   users: User[];
   updateDashboardPreferences: (preferences: Partial<DashboardPreferences>) => void;
   setActiveUser: (userId: string | null) => void;
   toggleFavoriteBoard: (boardId: string) => void;
+  setShowMyTasksInBoard: (show: boolean) => void;
   addUser: (user: User) => void;
   updateUser: (userId: string, updates: Partial<User>) => void;
   deleteUser: (userId: string) => void;
@@ -63,6 +65,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
       dashboardPreferences: defaultPreferences,
       activeUser: null,
       favoriteBoards: [],
+      showMyTasksInBoard: false,
       users: [defaultUser],
       
       updateDashboardPreferences: (preferences) =>
@@ -87,6 +90,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
             ? state.favoriteBoards.filter(id => id !== boardId)
             : [...state.favoriteBoards, boardId],
         })),
+      
+      setShowMyTasksInBoard: (show) => set({ showMyTasksInBoard: show }),
       
       addUser: (user) =>
         set((state) => ({

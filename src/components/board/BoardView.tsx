@@ -4,7 +4,7 @@ import { useBoardStore } from '@/lib/store/boardStore';
 import { usePreferencesStore } from '@/lib/store/preferencesStore';
 import { Button } from '@/components/ui/button';
 import { Card as CardUI } from '@/components/ui/card';
-import { Plus, Star } from 'lucide-react';
+import { Plus, Star, ListTodo } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, closestCenter, DragStartEvent, DragOverEvent, pointerWithin, rectIntersection } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useState, useEffect } from 'react';
@@ -14,10 +14,12 @@ import { CreateBucketDialog } from './CreateBucketDialog';
 import { ViewToggle } from './ViewToggle';
 import { BoardListView } from './BoardListView';
 import { FilterBar } from './FilterBar';
+import { MyTasksColumn } from './MyTasksColumn';
+import { cn } from '@/lib/utils';
 
 export function BoardView() {
-  const { currentBoard, buckets, cards, createBucket, moveCard, moveBucket, generateMockData, getFilteredCards } = useBoardStore();
-  const { favoriteBoards, toggleFavoriteBoard } = usePreferencesStore();
+  const { currentBoard, buckets, cards, createBucket, moveCard, moveBucket, generateMockData, getFilteredCards, updateCard } = useBoardStore();
+  const { favoriteBoards, toggleFavoriteBoard, showMyTasksInBoard, setShowMyTasksInBoard } = usePreferencesStore();
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [showCreateBucketDialog, setShowCreateBucketDialog] = useState(false);
 
@@ -52,6 +54,11 @@ export function BoardView() {
     
     if (!activeCard) return;
 
+    // If dropping on My Tasks column to assign to user
+    if (overId === 'my-tasks-drop-zone') {
+      return; // Just return, we'll handle the actual assignment in handleDragEnd
+    }
+
     // If we're over a card
     if (overId.startsWith('card-')) {
       const overCardId = overId.replace('card-', '');
@@ -78,6 +85,7 @@ export function BoardView() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    const { activeUser } = usePreferencesStore.getState();
     
     if (!over) {
       setTimeout(() => {
@@ -95,6 +103,20 @@ export function BoardView() {
       const draggedCard = filteredCards.find(c => c.id === cardId);
       
       if (!draggedCard) return;
+      
+      // Handle drop on My Tasks to assign to user
+      if (overId === 'my-tasks-drop-zone') {
+        if (activeUser) {
+          const currentAssignees = draggedCard.assignees || [];
+          if (!currentAssignees.includes(activeUser)) {
+            updateCard(cardId, { 
+              assignees: [...currentAssignees, activeUser]
+            });
+          }
+        }
+        setActiveCard(null);
+        return;
+      }
       
       // Check if dropping on another card (reordering within or between buckets)
       if (overId.startsWith('card-')) {
@@ -182,6 +204,15 @@ export function BoardView() {
     <div className="h-full flex flex-col">
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="px-6 py-3 flex items-center gap-4">
+          <Button
+            variant={showMyTasksInBoard ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowMyTasksInBoard(!showMyTasksInBoard)}
+            className="gap-2"
+          >
+            <ListTodo className="h-4 w-4" />
+            My Tasks
+          </Button>
           <div className="flex items-center gap-2 flex-shrink-0">
             <h1 className="text-xl font-bold">{currentBoard.title}</h1>
             <Button
@@ -200,7 +231,22 @@ export function BoardView() {
         </div>
       </div>
       
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 flex overflow-hidden">
+        {/* My Tasks Column - slides in from left */}
+        <div className={cn(
+          "transition-all duration-300 ease-in-out",
+          showMyTasksInBoard ? "w-80" : "w-0"
+        )}>
+          {showMyTasksInBoard && (
+            <MyTasksColumn 
+              currentBoardId={currentBoard.id}
+              onClose={() => setShowMyTasksInBoard(false)}
+            />
+          )}
+        </div>
+        
+        {/* Main board content */}
+        <div className="flex-1 overflow-x-auto">
         <div className="p-6">
         <DndContext
           collisionDetection={closestCenter}
@@ -244,6 +290,7 @@ export function BoardView() {
             )}
           </DragOverlay>
         </DndContext>
+        </div>
         </div>
       </div>
       
