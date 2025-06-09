@@ -32,6 +32,19 @@ export function CardItem({ card }: CardItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   
+  // Determine card content density - these need to be reactive to card changes
+  const hasLabels = card.labels && card.labels.length > 0;
+  const hasDescription = !!card.description;
+  const hasDueDate = !!card.dueDate;
+  const hasChecklist = card.checklist && card.checklist.length > 0;
+  const hasAssignees = card.assignees && card.assignees.length > 0;
+  const hasMetadata = hasDueDate || hasChecklist || hasAssignees;
+  const hasOnlyAssignees = hasAssignees && !hasDueDate && !hasChecklist;
+  const hasOnlyDueDate = hasDueDate && !hasChecklist && !hasAssignees;
+  const hasOnlyChecklist = hasChecklist && !hasDueDate && !hasAssignees;
+  const hasSingleMetadata = hasOnlyAssignees || hasOnlyDueDate || hasOnlyChecklist;
+  const isCompact = !hasDescription && (!hasMetadata || hasSingleMetadata) && !hasLabels;
+  
   const {
     attributes,
     listeners,
@@ -126,8 +139,11 @@ export function CardItem({ card }: CardItemProps) {
           style={style}
           className={cn(
             "bg-card text-card-foreground rounded-lg border shadow-sm",
-            "p-2.5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ease-in-out group relative",
-            "border-l-4",
+            "hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ease-in-out group relative",
+            // Dynamic border width based on content
+            isCompact ? "border-l-2" : "border-l-4",
+            // Dynamic padding based on content
+            isCompact ? "p-1.5" : hasMetadata ? "p-2.5" : "p-2",
             card.priority ? priorityColors[card.priority].borderL : 'border-l-transparent',
             card.completed && "opacity-60",
             isDragging && "border-dashed border-muted-foreground/50 bg-muted/20"
@@ -136,6 +152,13 @@ export function CardItem({ card }: CardItemProps) {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
+        {/* Completed indicator for compact cards */}
+        {card.completed && isCompact && (
+          <div className="absolute top-1 left-1">
+            <Check className="h-3 w-3 text-green-500" />
+          </div>
+        )}
+        
         {/* Card content */}
         <div
           ref={setActivatorNodeRef}
@@ -143,8 +166,8 @@ export function CardItem({ card }: CardItemProps) {
           className="cursor-grab active:cursor-grabbing"
         >
           {/* Labels and action buttons */}
-          {(card.labels && card.labels.length > 0) && (
-            <div className="flex items-start justify-between gap-2">
+          {hasLabels && (
+            <div className="flex items-start justify-between gap-2 mb-1">
               <div className="flex items-center gap-1 min-w-0 flex-1">
                 {card.labels.slice(0, 2).map((label) => (
                   <span
@@ -197,9 +220,12 @@ export function CardItem({ card }: CardItemProps) {
           )}
           
           {/* Action buttons for cards without labels (they need a home) */}
-          {(!card.labels || card.labels.length === 0) && (
-            <div className="flex justify-end -mt-1 mb-1 min-h-[22px]">
-              <div className={cn("flex items-center gap-0.5 transition-opacity -mr-1", isHovered ? "opacity-100" : "opacity-0")} onPointerDown={(e) => e.stopPropagation()}>
+          {!hasLabels && (
+            <div className={cn(
+              "absolute top-1 right-1 z-10",
+              isCompact && "top-0.5 right-0.5"
+            )}>
+              <div className={cn("flex items-center gap-0.5 transition-opacity", isHovered ? "opacity-100" : "opacity-0")} onPointerDown={(e) => e.stopPropagation()}>
                 <Button
                   size="icon"
                   variant="ghost"
@@ -243,32 +269,128 @@ export function CardItem({ card }: CardItemProps) {
                 }
               }}
               className={cn(
-                "text-sm font-normal leading-normal w-full bg-transparent border-b border-primary outline-none",
-                "px-0 py-0 mt-1"
+                "text-sm font-normal leading-snug w-full bg-transparent border-b border-primary outline-none",
+                "px-0 py-0",
+                hasLabels && "mt-0.5",
+                "max-w-full"
               )}
             />
           ) : (
-            <h4 
-              className={cn(
-                "text-sm font-normal leading-normal break-words cursor-text mt-1",
-                card.completed && "line-through text-muted-foreground"
+            <div className={cn(
+              "flex items-start justify-between gap-2",
+              hasLabels && "mt-0.5"
+            )}>
+              <h4 
+                className={cn(
+                  "text-sm font-normal leading-snug break-words cursor-text flex-1",
+                  card.completed && "line-through text-muted-foreground"
+                )}
+                onDoubleClick={handleStartEditingTitle}
+              >
+                {card.title}
+              </h4>
+              {/* Inline metadata when there's only one type */}
+              {hasSingleMetadata && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {hasOnlyDueDate && (
+                    <div className={cn(
+                      "flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-xs font-medium",
+                      {
+                        'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400': getDueDateStatus(new Date(card.dueDate), card.completed) === 'overdue',
+                        'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400': getDueDateStatus(new Date(card.dueDate), card.completed) === 'due-soon',
+                        'bg-gray-50 dark:bg-gray-950/20 text-gray-600 dark:text-gray-400': getDueDateStatus(new Date(card.dueDate), card.completed) === 'normal',
+                        'bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 line-through': getDueDateStatus(new Date(card.dueDate), card.completed) === 'completed',
+                      }
+                    )}>
+                      <Calendar className="h-3 w-3" />
+                      {getRelativeDateString(new Date(card.dueDate))}
+                    </div>
+                  )}
+                  
+                  {hasOnlyChecklist && (
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-muted/50">
+                      <CheckSquare className="h-3 w-3 flex-shrink-0" />
+                      {card.checklist.length <= 5 ? (
+                        // Visual dots for small checklists
+                        <div className="flex items-center gap-0.5">
+                          {card.checklist.map((item, index) => {
+                            const completedCount = card.checklist?.filter(item => item.completed).length || 0;
+                            const isFilledIn = index < completedCount;
+                            return (
+                              <div
+                                key={index}
+                                className={cn(
+                                  "h-2 w-2 rounded-full transition-colors",
+                                  isFilledIn 
+                                    ? "bg-green-500 dark:bg-green-600" 
+                                    : "bg-muted-foreground/30 border border-muted-foreground/50"
+                                )}
+                              />
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        // Compact progress indicator for larger checklists
+                        <div className="flex items-center gap-1">
+                          <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-green-500 dark:bg-green-600 transition-all"
+                              style={{
+                                width: `${(card.checklist.filter(item => item.completed).length / card.checklist.length) * 100}%`
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <span className="text-xs font-medium">
+                        {card.checklist.filter(item => item.completed).length}/{card.checklist.length}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {hasOnlyAssignees && (
+                    <div className="flex -space-x-2">
+                      {card.assignees.slice(0, 3).map((assigneeId, index) => {
+                        const user = users.find(u => u.id === assigneeId);
+                        const displayName = user ? user.name : 'Unknown';
+                        return (
+                          <div
+                            key={index}
+                            className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium border-2 border-background"
+                            title={displayName}
+                          >
+                            <span className="text-foreground">{displayName.charAt(0).toUpperCase()}</span>
+                          </div>
+                        );
+                      })}
+                      {card.assignees.length > 3 && (
+                        <div className="h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-medium border-2 border-background">
+                          +{card.assignees.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-              onDoubleClick={handleStartEditingTitle}
-            >
-              {card.title}
-            </h4>
+            </div>
           )}
           
-          {card.description && (
-            <p className="text-xs text-muted-foreground mt-1.5">{card.description}</p>
+          {hasDescription && (
+            <p className={cn(
+              "text-xs text-muted-foreground",
+              isCompact ? "mt-0.5" : "mt-1"
+            )}>{card.description}</p>
           )}
           
-          {(card.dueDate || (card.checklist && card.checklist.length > 0) || card.assignees) && (
-            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground mt-1.5">
-              <div className="flex items-center gap-3">
+          {hasMetadata && !hasSingleMetadata && (
+            <div className={cn(
+              "flex items-center justify-between gap-2 text-xs text-muted-foreground",
+              hasDescription || hasLabels ? "mt-1.5" : "mt-1"
+            )}>
+              <div className="flex items-center gap-2 flex-wrap">
                 {card.dueDate && (
                   <div className={cn(
-                    "flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium",
+                    "flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-xs font-medium",
                     {
                       'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400': getDueDateStatus(new Date(card.dueDate), card.completed) === 'overdue',
                       'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400': getDueDateStatus(new Date(card.dueDate), card.completed) === 'due-soon',
@@ -281,8 +403,8 @@ export function CardItem({ card }: CardItemProps) {
                   </div>
                 )}
                 {card.checklist && card.checklist.length > 0 && (
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-muted/50">
-                    <CheckSquare className="h-3 w-3" />
+                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-muted/50">
+                    <CheckSquare className="h-3 w-3 flex-shrink-0" />
                     {card.checklist.length <= 5 ? (
                       // Visual dots for small checklists
                       <div className="flex items-center gap-0.5">
@@ -329,7 +451,7 @@ export function CardItem({ card }: CardItemProps) {
                     return (
                       <div
                         key={index}
-                        className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium border-2 border-background"
+                        className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium border-2 border-background"
                         title={displayName}
                       >
                         <span className="text-foreground">{displayName.charAt(0).toUpperCase()}</span>
@@ -337,7 +459,7 @@ export function CardItem({ card }: CardItemProps) {
                     );
                   })}
                   {card.assignees.length > 3 && (
-                    <div className="h-6 w-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-medium border-2 border-background">
+                    <div className="h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-medium border-2 border-background">
                       +{card.assignees.length - 3}
                     </div>
                   )}

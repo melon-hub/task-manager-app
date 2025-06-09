@@ -70,9 +70,9 @@ export function EditCardDialog({ open, onOpenChange, card, onUpdateCard }: EditC
         priority: priority || undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
         completed,
-        assignees: assignees.length > 0 ? assignees : undefined,
-        checklist: checklist.length > 0 ? checklist : undefined,
-        labels: labels.length > 0 ? labels : undefined,
+        assignees: assignees,
+        checklist: checklist,
+        labels: labels,
       });
       onOpenChange(false);
     }
