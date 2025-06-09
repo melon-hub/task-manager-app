@@ -145,17 +145,17 @@ export function CardItem({ card }: CardItemProps) {
           {/* Labels and action buttons */}
           {(card.labels && card.labels.length > 0) && (
             <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-1 flex-wrap">
-                {card.labels.slice(0, 3).map((label) => (
+              <div className="flex items-center gap-1 min-w-0 flex-1">
+                {card.labels.slice(0, 2).map((label) => (
                   <span
                     key={label.id}
-                    className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium text-white"
+                    className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium text-white truncate max-w-[80px]"
                     style={{ backgroundColor: label.color }}
                   >
                     {label.name}
                   </span>
                 ))}
-                {card.labels.length > 3 && (
+                {card.labels.length > 2 && (
                   <div
                     ref={labelTriggerRef}
                     className="inline-flex"
@@ -163,7 +163,7 @@ export function CardItem({ card }: CardItemProps) {
                     onMouseLeave={() => setShowLabelTooltip(false)}
                   >
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground cursor-help">
-                      +{card.labels.length - 3}
+                      +{card.labels.length - 2}
                     </span>
                   </div>
                 )}

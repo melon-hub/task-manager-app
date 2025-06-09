@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChecklistManager } from './edit-card/ChecklistManager';
 import { AssigneeManager } from './edit-card/AssigneeManager';
-import { LabelManager } from './edit-card/LabelManager';
+import { LabelPopoverCompact } from './edit-card/LabelPopoverCompact';
 
 interface EditCardDialogProps {
   open: boolean;
@@ -196,9 +196,9 @@ export function EditCardDialog({ open, onOpenChange, card, onUpdateCard }: EditC
               </div>
             </div>
             
-            <LabelManager
-              labels={labels}
-              onChange={setLabels}
+            <LabelPopoverCompact
+              selectedLabels={labels}
+              onLabelsChange={setLabels}
             />
             
             <AssigneeManager
