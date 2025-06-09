@@ -9,6 +9,7 @@ This project follows **Semantic Versioning 2.0.0** (SemVer) with the format: `MA
 - **PATCH**: Backwards-compatible bug fixes
 
 Current Version: `0.1.0` (Pre-release/MVP phase)
+Next Version: `0.2.0` (Pending release with major UI improvements)
 
 ## Git Tag Format
 We use annotated tags with the following convention:
@@ -51,9 +52,9 @@ git push origin v0.1.0
 
 ### Pre-1.0 (Current Phase)
 - `0.1.0` - Initial MVP release
-- `0.2.0` - Core features complete (boards, buckets, cards)
-- `0.3.0` - Advanced features (labels, filters, search)
-- `0.4.0` - Dashboard and analytics
+- `0.2.0` - Major UI/UX improvements (adaptive cards, improved labels, inline metadata)
+- `0.3.0` - Advanced features (full search, filters, enhanced assignees)
+- `0.4.0` - Dashboard refactoring with dual-purpose view
 - `0.5.0` - Performance optimizations
 - `0.6.0` - Beta release with all planned features
 

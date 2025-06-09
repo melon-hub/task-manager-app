@@ -8,7 +8,7 @@
 - [x] Multiple boards with customizable lists/buckets
 - [x] Drag-and-drop card management
 - [x] Rich card properties (title, description, due dates, priority)
-- [x] Custom labels with color coding
+- [x] Custom labels with color coding and improved management
 - [x] Checklists with progress tracking
 - [x] Smart due date display with color coding
 - [x] Completion status with visual indicators
@@ -17,10 +17,12 @@
 - [x] Analytics dashboard with charts and metrics
 - [x] Theme system (light/dark mode)
 - [x] Responsive design for all devices
+- [x] Adaptive card height system
+- [x] Inline metadata display for cleaner cards
 
 #### Partially Implemented Features 🔄
 - [x] Assignee data model (basic implementation)
-- [x] Label system (needs UX improvements)
+- [x] Label system (improved with LabelPopoverCompact)
 - [x] Search functionality (basic implementation)
 
 ### Recently Completed Improvements ✅
@@ -38,6 +40,25 @@
     - `LabelManager.tsx` - Label management with drag-and-drop reordering
   - Improved maintainability and testability
   - Better separation of concerns
+
+#### UI/UX Improvements
+- **[x] Adaptive Card Height System:** Cards now dynamically adjust their height based on content
+  - Compact mode for simple cards (title only or single metadata)
+  - Reduced padding and border width for minimal cards
+  - Inline metadata display when only one type exists
+  - Smart layout decisions based on content density
+  
+- **[x] Improved Label Management:** New LabelPopoverCompact component
+  - Unified interface for search, create, edit, and delete labels
+  - In-popover editing with color picker
+  - Search functionality to find labels quickly
+  - Streamlined workflow reduces clicks
+  
+- **[x] Inline Metadata Display:** Single metadata items now display inline
+  - Due dates appear next to title when it's the only metadata
+  - Checklist progress shows inline for better scanning
+  - Assignee avatars display inline when no other metadata exists
+  - Cleaner, more compact card appearance
 
 ### High Priority Improvements 🔥
 
@@ -97,11 +118,14 @@
 - [ ] Add keyboard shortcuts for search
 - [ ] Implement quick filters
 
-#### 3. Label System UX Improvements
-- [ ] Better keyboard navigation in label picker
-- [ ] Ability to reorder labels
+#### 3. Additional Label System Improvements
+- [x] Better label management with LabelPopoverCompact
+- [x] Search functionality in label picker
+- [x] In-popover label editing and deletion
+- [ ] Keyboard navigation in label picker
+- [ ] Drag-and-drop label reordering
 - [ ] Label groups/categories
-- [ ] Quick label toggle from card
+- [ ] Quick label toggle from card view
 - [ ] Bulk apply/remove labels
 - [ ] Label usage statistics
 - [ ] Import/export label sets
@@ -308,6 +332,30 @@ When data moves from local-only to a cloud database.
     - **JWT Validation:** On every API request, validate the JWT provided by NextAuth.js to authenticate the user.
     - **Rate Limiting:** Use a library like `express-rate-limit` or Vercel's built-in helpers to prevent brute-force attacks.
     - **CORS:** Configure Cross-Origin Resource Sharing in `next.config.ts` to only allow requests from your application's domain.
+
+## Recent Architectural Improvements
+
+### Adaptive Card Height System
+The card component now intelligently adjusts its visual density based on content:
+- **Compact Mode**: Triggered when card has minimal content (title only or single metadata)
+- **Dynamic Padding**: Reduces from `p-2.5` to `p-1.5` for compact cards
+- **Border Width**: Reduces from `border-l-4` to `border-l-2` for compact cards
+- **Inline Metadata**: Single metadata items display inline next to title
+
+### LabelPopoverCompact Component
+A unified label management interface that replaces the previous multi-component approach:
+- **Single Popover**: Search, create, edit, and delete all in one place
+- **Color Picker**: Integrated 12-color palette for label customization
+- **Search Filter**: Quick label search functionality
+- **Edit Mode**: Click edit icon to modify existing labels inline
+- **Reduced Clicks**: Streamlined workflow improves efficiency
+
+### Inline Metadata Display
+Smart layout decisions for cleaner card appearance:
+- **Single Due Date**: Shows inline with color-coded background
+- **Single Checklist**: Shows progress dots or bar inline
+- **Single Assignee Set**: Shows avatars inline (up to 3 visible)
+- **Multiple Metadata**: Falls back to traditional stacked layout
 
 ## Technical Architecture
 

@@ -274,6 +274,8 @@ db.version(1).stores({
 - Board components handle drag-and-drop logic
 - Dialogs use Radix UI for accessibility
 - All forms should update through store actions
+- Cards use adaptive height system based on content
+- Label management uses unified LabelPopoverCompact component
 
 ### Development Patterns
 

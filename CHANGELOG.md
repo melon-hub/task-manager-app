@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Note
+The next release (0.2.0) will include significant UI/UX improvements including the adaptive card height system, improved label management, and inline metadata display. These features greatly enhance the visual density and usability of the task board.
+
+## [0.2.0] - TBD
+
 ### Added
 - Phase 1: Fluid Card & List Interactions
   - Hover-to-reveal 'Add Card' button in buckets
@@ -23,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optimized toast performance for immediate feedback
 - Error boundaries for graceful error handling
 - Component composition improvements for better maintainability
+- Adaptive card height system for optimal content density
+- LabelPopoverCompact component for improved label management
+- Inline metadata display for single metadata items (due date, checklist, or assignees)
 
 ### Changed
 - Refactored EditCardDialog into smaller, focused components:
@@ -32,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved drag-and-drop UX by removing grip handles for cleaner appearance
 - Made bucket hover indicators more subtle
 - Fixed TypeScript type safety issues throughout the codebase
+- Cards now dynamically adjust padding and border width based on content
+- Label management moved to unified LabelPopoverCompact component
+- Single metadata items now display inline next to card titles
 
 ### Fixed
 - Fixed board type issues in dashboard
@@ -44,6 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed toast countdown getting stuck at 1 second
 - Fixed overlapping toasts when rapidly deleting/undoing cards
 - Optimized initial toast appearance speed for better performance
+- Fixed label management workflow to reduce clicks and improve UX
+- Fixed card layout issues with metadata display
 
 ## [0.1.0] - 2025-01-08
 
